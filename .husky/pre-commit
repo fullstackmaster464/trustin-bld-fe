@@ -1,0 +1,11 @@
+# Run ESLint on staged TypeScript files
+git diff --cached --name-only --diff-filter=AM | grep '\.tsx\|\.ts$' | xargs eslint --fix
+
+# Check if ESLint passed before running the build
+if [ $? -ne 0 ]; then
+  echo "Linting failed. Aborting commit."
+  exit 1
+fi
+
+# Run the build process
+npm run build

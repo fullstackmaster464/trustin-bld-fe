@@ -1,0 +1,202 @@
+@import "../../assets/scss/helpers/colors";
+.country-selection {
+    .ant-select-selector {
+        background: transparent !important;
+    }
+
+    .icon {
+        position: absolute;
+        z-index: 1;
+    }
+
+    .ant-input-affix-wrapper {
+        width: 1px;
+        background: transparent;
+        border: 0;
+    }
+    .ant-select {
+        width: 100% !important;
+
+        .ant-select-selector {
+            padding: 5px 0 0 48px !important;
+        }
+    }
+}
+@media (min-width: 580px) {
+    .auth-form-width {
+        width: 410px;
+    }
+
+    .xy-center {
+        justify-content: center !important;
+    }
+}
+@media (max-width: 579px) {
+    .auth-form-width {
+        width: auto;
+        margin: auto;
+    }
+
+    .xy-center {
+        justify-content: center !important;
+    }
+}
+
+.t-login {
+    .login {
+        padding-bottom: 9.5rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .t-login {
+        .login {
+            padding-bottom: 5rem;
+            height: 100vh;
+        }
+    }
+
+    .t-sign-up {
+        height: 100vh;
+    }
+}
+
+.t-login,
+.t-sign-up,
+.t-forget-password {
+    .small-text {
+        font-size: 16px;
+    }
+}
+
+.t-login,
+.t-sign-up,
+.t-forget-password {
+    .link-view span {
+        font-size: 14px;
+    }
+}
+
+.t-login,
+.t-sign-up,
+.t-forget-password {
+
+    .ant-input-affix-wrapper,
+    .ant-input,
+    .ant-select-selector,
+    .ant-select:not(.ant-select-customize-input) .ant-select-selector,
+    .ant-input-number {
+        padding: 0px 12px;
+
+        &:focus {
+            border-color: $main-color;
+            box-shadow: none;
+        }
+    }
+}
+
+.ant-input-affix-wrapper-focused,
+.ant-input-affix-wrapper:focus {
+    border-color: $main-color;
+    box-shadow: none;
+}
+
+.centered {
+    justify-content: center;
+    display: flex;
+    align-items: center;
+}
+
+.t-sign-up {
+    .signup-btn {
+        border-radius: 6px;
+    }
+
+    .country-number .ant-input {
+        border-top-right-radius: 6px;
+        border-bottom-right-radius: 6px;
+    }
+
+    .country-number .ant-input-affix-wrapper {
+        border-top-left-radius: 6px;
+        border-bottom-left-radius: 6px;
+    }
+
+    .ant-btn>span {
+        font-size: 16px;
+        font-family: "Poppins", sans-serif !important;
+    }
+
+    .signup-term {
+        .small-term {
+            font-size: 12px !important;
+
+            .link-view span {
+                font-size: 12px !important;
+            }
+        }
+
+        .user-text {
+            font-size: 16px !important;
+            text-align: end;
+        }
+    }
+}
+
+.t-login {
+    .create-text {
+        font-size: 16px;
+    }
+
+    .login-btn {
+        border-radius: 6px;
+    }
+
+    .ant-btn>span {
+        font-size: 16px;
+        font-family: "Poppins", sans-serif !important;
+    }
+
+    .ant-input-affix-wrapper:not(.ant-input-affix-wrapper-disabled):hover {
+        border-color: $main-color;
+    }
+}
+
+.t-login .otp-message{
+    font-size: 14px;
+    margin-bottom: 0px;
+}
+
+.resend-msg-container{
+text-align: right;
+}
+.link-sent {
+    background: #FFFFFF;
+    text-align: center;
+    border-radius: 30px;
+  }
+  
+  .button-style {
+    background-color: #FF6600;
+    border-radius: 28px;
+    width: 100%;
+    max-width: 244px;
+    height: 46px;
+    padding: 12px 15px;
+    display: inline-block;
+    color: #FFFFFF;
+    font-size: 16px;
+    text-align: center;
+  }
+  
+  @media screen and (max-width: 768px) {
+    .img-link-sent,
+    .custom-text,
+    .button-style {
+      margin-left: 0;
+    }
+    
+    .button-style {
+      max-width: 244px;
+    }
+  }

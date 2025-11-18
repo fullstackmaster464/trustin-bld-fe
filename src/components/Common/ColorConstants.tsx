@@ -1,0 +1,15 @@
+export const bar1 = "#8FB5FF";
+export const bar2 = "#FFC727";
+export const bar3 = "#FF4949";
+export const bar4 = "#00BD71";
+export const linechart = "#EBEBEB";
+export const linechartBorder = "#ff6c00";
+export const black = "#000";
+export const white = "#FFF";
+export const cascadingWhite = "#F6F6F6";
+export const SecondaryColor = "#FF6600";
+export const successGreen = "#04992E";
+export const errorRedLight = "#FF4949";
+export const grayMedium = "#929292";
+export const grayDark = "#232323";
+export const darkWhite = "#FAFAFA";

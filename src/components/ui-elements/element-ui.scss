@@ -1,0 +1,191 @@
+@import "../../assets/scss/helpers/colors";
+
+.auth-text {
+  font-size: 25px;
+  font-style: normal;
+  font-weight: 700;
+  color: $main-color;
+}
+.title-css {
+  font-size: 32px;
+  font-style: normal;
+  font-weight: 700;
+  color: $main-color;
+}
+.small-text {
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 400;
+  color: $text-color;
+}
+.text-14x {
+  font-size: 14px;
+}
+.normal-text {
+  font-size: 18px;
+  font-style: normal;
+  font-weight: 300 !important;
+  margin-bottom: 10px;
+  line-height: 20px;
+  color: $text_dark_gray;
+}
+.normal-bold-text {
+  font-size: 18px;
+  font-style: normal;
+  font-weight: 500 !important;
+  margin-bottom: 10px;
+  line-height: 20px;
+  color: $text_dark_gray;
+}
+.text-color {
+  color: $text-color;
+}
+.info-text {
+  font-size: 12px;
+  font-weight: 400;
+  color: $userInfo;
+  margin-bottom: 5px;
+}
+.bold-text {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 5px;
+}
+.card-head-text {
+  font-size: 22px;
+  font-style: normal;
+  font-weight: 600;
+  color: #3a3a3a;
+  margin-bottom: 12px;
+}
+.card-currency-text {
+  font-size: 24px;
+  color: $dark-grey;
+  font-weight: 500;
+}
+.trust-button {
+  min-width: 10rem;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  height: 46px;
+  border-radius: 6px;
+  border: 0;
+  background-color: $main-color;
+  color: $white-color;
+  &:hover,
+  &:active,
+  &:focus {
+    background-color: $main-color;
+    color: $white-color;
+    box-shadow: 7px 6px 22px #01339936;
+  }
+}
+
+button {
+  span {
+    font-size: 14px;
+    font-size: 16px;
+    font-weight: 400;
+    letter-spacing: 0.5px;
+  }
+}
+.ant-btn-link:hover {
+  span {
+    color: $secondary-color;
+  }
+}
+.h-40 {
+  height: 40px;
+}
+.link-view {
+  color: $main-color;
+  span {
+    font-size: 12px;
+    font-weight: 500;
+    color: $main-color;
+  }
+  &:hover {
+    color: $secondary-color;
+  }
+  &:hover span {
+    color: $secondary-color;
+  }
+}
+
+.status-btn {
+  height: auto;
+  border: 1px solid $main-color;
+  border-radius: 8px;
+  padding: 4px 10px;
+  span {
+    font-size: 12px;
+    font-weight: 500;
+    color: $main-color;
+  }
+  &:hover {
+    border: 1px solid $secondary-color;
+  }
+  &:hover span {
+    color: $secondary-color;
+  }
+}
+.ant-input-affix-wrapper,
+.ant-input,
+.ant-select-selector,
+.ant-select:not(.ant-select-customize-input) .ant-select-selector,
+.ant-input-number {
+  padding: 0 12px;
+  font-size: 16px;
+  font-weight: 400;
+  border-radius: 6px;
+  min-height: 42px;
+  border: 1px solid $light-grey;
+}
+.ant-input-affix-wrapper > input.ant-input {
+  height: 42px !important;
+}
+
+//For mobile view
+@media (max-width: 465px) {
+  .title-css {
+    font-size: 1.325rem;
+    font-weight: 500;
+  }
+  .trust-button,
+  .secondary-button {
+    min-width: 7rem;
+  }
+  .normal-text {
+    font-size: 14px;
+  }
+}
+.t-login,
+.t-sign-up {
+  .trust-button,
+  .google-btn,
+  .ant-select-selector,
+  .ant-input-group.ant-input-group-compact {
+    height: 42px;
+  }
+  .ant-select-selector,
+  .ant-select:not(.ant-select-customize-input) .ant-select-selector {
+    padding: 0px 12px;
+    height: 42px;
+  }
+  .country-number {
+    .ant-input-group.ant-input-group-compact {
+      height: 42px;
+    }
+    .ant-input-affix-wrapper {
+      border-top-left-radius: 10px;
+      border-bottom-left-radius: 10px;
+      background: transparent;
+      padding: 0px 12px;
+      height: 42px;
+    }
+    .ant-input {
+      border-top-right-radius: 10px;
+      border-bottom-right-radius: 10px;
+    }
+  }
+}
