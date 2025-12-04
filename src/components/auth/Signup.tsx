@@ -89,6 +89,8 @@ const Signup = ():any => {
               email: response.data.email.toLowerCase(),
               countryAlias: response.data.countryAlias,
               contactNumber: response.data.contactNumber,
+              projectId: response.data.projectId,
+              transactionType: response.data.transactionType,
               userType: userType === 'advisor' ? 'ESCROW_ADVISOR' : 'USER'
             });
             form.setFieldsValue({
@@ -96,6 +98,8 @@ const Signup = ():any => {
               email: response.data.email,
               countryAlias: response.data.countryAlias,
               contactNumber: response.data.contactNumber,
+              projectId: response.data.projectId,
+              transactionType: response.data.transactionType,
               userType: userType === 'advisor' ? 'ESCROW_ADVISOR' : 'USER'
             });
             const tmpCallingCode = countryCodes.filter(
@@ -119,6 +123,8 @@ const Signup = ():any => {
               email: response.data.email.toLowerCase(),
               countryAlias: response.data.countryAlias,
               contactNumber: response.data.contactNumber,
+              projectId: response.data.projectId,
+              transactionType: response.data.transactionType,
               userType: 'USER'
             });
             form.setFieldsValue({
@@ -126,6 +132,8 @@ const Signup = ():any => {
               email: response.data.email,
               countryAlias: response.data.countryAlias,
               contactNumber: response.data.contactNumber,
+              projectId: response.data.projectId,
+              transactionType: response.data.transactionType,
               userType: 'USER'
             });
           });
@@ -497,6 +505,35 @@ const Signup = ():any => {
                       </span>
                     </Tooltip>
                 </InputText>}
+
+
+                  <InputText
+                  fieldname="projectId"
+                  className="inputField mb-4 w-100 signup-res-inputfield"
+                  rules={[
+                    {
+                      required: true,
+                      message: "ProjectID is required!",
+                    }
+                  ]}
+                >
+                  <Input placeholder="Project Id"   disabled={!!userData.projectId}/>
+                </InputText>
+
+
+                   <InputText
+                  fieldname="transactionType"
+                  className="inputField mb-4 w-100 signup-res-inputfield"
+                  rules={[
+                    {
+                      required: true,
+                      message: "Transaction Type is required!",
+                    }
+                  ]}
+                >
+                  <Input placeholder="Transaction Type"   disabled={!!userData.transactionType}/>
+                </InputText>
+
 
                 <Form.Item
                   name="contactNumber"
