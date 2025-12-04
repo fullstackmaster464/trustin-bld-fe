@@ -520,6 +520,7 @@ const Signup = ():any => {
                     }}
                     maxLength={10}
                     onBlur={handleBlur}
+                    disabled={!!userData?.contactNumber}
 
                   />
                 </Form.Item>

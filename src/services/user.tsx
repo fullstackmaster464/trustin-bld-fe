@@ -100,7 +100,8 @@ const uri = {
   getGuestUser: "api/v1/users/guest",
   getCurrencyList: "api/v1/meta/currencies",
   getForexExchangeRate: "api/v1/reference-data/forex-rate",
-  updateContractPayoutAccount: "api/v1/contracts/update/payout-account"
+  updateContractPayoutAccount: "api/v1/contracts/update/payout-account",
+  inviteuser: "api/v1/users/import"
 };
 
 export const registerUser = async (reqBody: any) => {
@@ -749,3 +750,11 @@ export const updateContractPayoutAccount = async (body: {
 }) => {
   return await instance.post(uri.updateContractPayoutAccount, body)
 }
+
+
+
+
+export const inviteUser = async (requestBody: any): Promise<any> => {
+  return await instance.post(uri.inviteuser, requestBody);
+};
+

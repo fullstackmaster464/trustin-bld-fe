@@ -847,3 +847,4 @@ export const getVaTransactionListByContractAlias = async (contractAlias: string)
 export const unblockUser = async (requestBody: any): Promise<any> => {
   return await instance.put(uri.unblockUser, requestBody);
 };
+

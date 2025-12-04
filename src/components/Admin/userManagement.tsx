@@ -14,7 +14,8 @@ import {
   Modal,
   Row,
   Form,
-  Col
+  Col,
+  Upload
 } from "antd";
 import { useNavigate } from "react-router-dom";
 import Management from "../../assets/img/Headers/User_management.svg";
@@ -47,10 +48,12 @@ import {
   sortingOrder,
 } from "../Common/Constants";
 import moment from "moment";
-import { getAllCountries, registerUser, searchManagementdata } from "../../services/user";
+import { getAllCountries, inviteUser, registerUser, searchManagementdata } from "../../services/user";
 import DefaultLayout from "../Common/DefaultLayout";
 import UserMobileResponsiveCard from "./UserMobileResponsiveCard";
-import filterIcon from "../../assets/img/filter.svg";
+import filterIcon from "../../assets/img/filter.svg"; 
+
+
 // import Trio from "../../assets/img/trio.svg";
 import closeIcon from "../../assets/img/whiteclose.svg";
 import FilterCard from "./FilterCard";
@@ -65,6 +68,7 @@ import UserFull from "../../assets/img/User_Full.svg";
 import SuccessIcon from "../../assets/img/Successpopupicon.svg";
 import Country from "../../assets/img/Country.svg";
 import modalcloseicon from "../../assets/img/modalclose.svg"
+import { UploadOutlined } from "@ant-design/icons";
 
 const UserManagement = ():any => {
   const REACT_APP_SERVER_URL = process.env.REACT_APP_SERVER_URL;
@@ -100,6 +104,7 @@ const UserManagement = ():any => {
     setWidth(document.body.clientWidth);
   };
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
+  const [isUploadModalVisible, setIsUploadModalVisible] = useState(false);
   const [form] = Form.useForm();
   const [btnLoader, setBtnLoader] = useState(false);
   const [error, setError] = useState({ status: false, message: "" });
@@ -775,6 +780,34 @@ const UserManagement = ():any => {
       setLoading(false);
     }
   };
+
+ const onFinishUpload = async (values: any) => {
+  try {
+    setBtnLoader(true);
+    const formData = new FormData();
+    formData.append("file", values.file);
+
+    const res = await inviteUser(formData);
+    
+    setIsUploadModalVisible(false);
+    if(res?.data?.errors && res?.data?.errors?.length){
+      message.error(res?.data?.message);
+      return;
+    }
+    fetchUsersList(current, page, "all", {});
+    message.success("Imported successfully!");
+  } catch (e) {
+    console.error(e);
+    message.error("Upload failed!");
+  } finally {
+    setBtnLoader(false);
+  }
+ };
+
+
+
+
+
   return (
     <div className="scrollbar-container">
       <div className="fullHeight">
@@ -855,7 +888,7 @@ const UserManagement = ():any => {
                   </div>
                   <div className="d-flex">
                     {UserType !== "SUPPORT_ENGINEER"  &&
-                 
+                  <>
                     <Button
                       className="add-itemtype mx-3"
                       onClick={() => {
@@ -863,7 +896,17 @@ const UserManagement = ():any => {
                       }}
                     >
                       + Add New User
-                    </Button> }
+                    </Button>
+                    <Button
+                      className="add-itemtype mx-3"
+                      onClick={() => {
+                        setIsUploadModalVisible(true);
+                      }}
+                    >
+                      + Upload
+                    </Button>
+                   </> 
+                    }
                     <Button
                       className="downloadBtn mx-3"
                       hidden={selected ? false : true}
@@ -1322,6 +1365,77 @@ const UserManagement = ():any => {
                   </Row>
                 </Form>    
                 </Modal>
+
+
+          <Modal title={
+                    <div className="d-flex justify-content-between align-items-center">
+                      <p className="large-title mb-0">Upload user</p>
+                      <img
+                        src={modalcloseicon}
+                        alt="close-icon"
+                      className="cursor"
+                        onClick={() => setIsUploadModalVisible(false)}
+                      />
+                    </div>
+                  }
+                    className="add-item-category-modal d-flex center"
+                    open={isUploadModalVisible}
+                    footer={null}
+                    closable={false}
+                    onCancel={() => setIsUploadModalVisible(false)}
+                  >
+                    
+                    <hr className="break-line" />
+                    <Form onFinish={onFinishUpload} form={form}>
+                      <Row gutter={[16, 16]} align="middle">
+                      <Col xs={24} sm={24} md={12} lg={12} xl={12}>
+                      <Form.Item
+                        name="file"
+                        valuePropName="file"
+                        rules={[
+                          {
+                            required: true,
+                            message: "CSV file is required!",
+                          },
+                        ]}
+                      >
+                        <Upload
+                          beforeUpload={() => false} // prevents auto upload
+                          accept=".csv"
+                          maxCount={1}
+                          onChange={(info) => form.setFieldsValue({ file: info.file })}
+                        >
+                          <Button icon={<UploadOutlined />}>Upload CSV File</Button>
+                        </Upload>
+                      </Form.Item>
+                    </Col>
+ 
+                  </Row>
+                  <Row gutter={{ xs:25, sm: 25, md: 25, lg: 25 }} >
+                    <Col span={24} className="my-4 w-100 d-flex align-items-center">
+                      <Button
+                        key="submit"
+                        type="primary"
+                        htmlType="submit"
+                        loading={btnLoader}
+                        className="modal-button w-auto "
+                      >
+                        Submit sheet
+                      </Button>
+                      <Button
+                        className="rounded_cancel_btn mx-3 mt-0"
+                        onClick={() => {
+                          form.resetFields(); 
+                        }}
+                      >
+                        Clear
+                      </Button>
+                    </Col>
+                  </Row>
+                </Form>    
+                </Modal>
+
+
                 <Modal
                   open={modalVisible}
                   footer={false}
