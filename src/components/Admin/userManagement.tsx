@@ -1452,7 +1452,7 @@ const formatFileSize = (bytes: number): string => {
                   <Upload
                    beforeUpload={() => false} // prevents auto upload
                     // accept=".csv"
-                    accept=".xlsx,.xls,.csv"
+                    accept=".xlsx,.xls"
                     maxCount={1}
                     onChange={(info) => {
                       if (info.file) {
