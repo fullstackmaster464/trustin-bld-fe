@@ -9,6 +9,7 @@ import Reject from "../../../assets/img/reject.svg";
 import UserHalf from "../../../assets/img/userHalf.svg";
 import Calendar from "../../../assets/img/Calendar.svg";
 import ClockLight from "../../../assets/img/clock_light.svg";
+import Warning from "../../../assets/img/warningicon.svg";
 import CommentImg from "../../../assets/img/Comment.svg";
 // import { CloudDownloadOutlined } from "@ant-design/icons";
 import BlueEye from "../../../assets/img/blue_eye.svg";
@@ -38,6 +39,8 @@ const SourceOfFundDetails = (props: any) => {
   const [ action, setAction ] = useState<string>("");
   const userAlias = JSON.parse(getLocalStorage("auth")!)?.userAlias;
   const [form] = Form.useForm();
+  const [openRejectConfirmModal, setOpenRejectConfirmModal] = useState(false);
+
 
   const fetchSoFDetails = () => {
     getContractSoFDetails(contractAlias, contractType)
@@ -97,6 +100,7 @@ const SourceOfFundDetails = (props: any) => {
           setModalMessage(response?.data?.message);
           setModalMessageIcon(action === "APPROVED" ? approved : Reject );
           setOpenMessageModal(true);
+          setOpenRejectConfirmModal(false);
           getPaymentDetails();
           fetchSoFDetails();
       } else {
@@ -381,7 +385,12 @@ const SourceOfFundDetails = (props: any) => {
               <Button className="rounded mt-0" htmlType="submit" onClick={() => setAction("APPROVED")}>
                 Approve
               </Button>
-              <Button className="rounded_cancel_btn mx-3 mt-0" htmlType="submit" onClick={() => setAction("REJECTED")}>
+              <Button className="rounded_cancel_btn mx-3 mt-0"
+              onClick={() => {
+                // setAction("REJECTED");
+                setOpenRejectConfirmModal(true);
+              }}
+              >
                 Reject
               </Button>
             </div>
@@ -389,6 +398,47 @@ const SourceOfFundDetails = (props: any) => {
         </Form>
       </Modal>
 
+{/* reject modal */}
+      <Modal
+        open={openRejectConfirmModal}
+        onCancel={() => {
+          setOpenRejectConfirmModal(false);
+          setAction("");
+        }}
+        footer={false}
+        centered
+        width={480}
+        className="modal-box text-center">
+        <div className="warning-icon center mt-4">
+          <Image src={Warning} alt="Warning" preview={false} height={70} width={70} />
+        </div>
+        <div className="warning-text center bold fs-20 mt-3">Warning</div>
+        <p className="sub-text fw-400 px-4 mt-2">Are you sure you want to reject the source of funds document?
+        </p>
+        <div className="d-flex justify-content-center gap-2 mt-4 mb-3">
+          <Button
+            className="rounded_cancel_btn mx-3 mt-0"
+            onClick={() => {
+              setOpenRejectConfirmModal(false);
+              setAction("");
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            type="primary"
+            danger
+            className="rounded mt-0"
+            onClick={() => {
+              setAction("REJECTED");
+              setOpenRejectConfirmModal(false);
+              form.submit();
+            }}
+          >
+            Confirm Reject
+          </Button>
+        </div>
+      </Modal>
       <Modal
         className="text-center modal-box"
         centered

@@ -49,6 +49,7 @@ import DefaultLayout from "../Common/DefaultLayout";
 import TransactionPreview from "./NewTransaction/TransactionPreview";
 import infoIcon from "../../assets/img/informIcon.svg";
 import AddBankAccountModal from "./AddBankAccountModal";
+// import MultiCounter from "./multi-counter";
 // import TransactionDetails from "./NewTransaction/TransactionDetails";
 
 
@@ -57,6 +58,12 @@ const CreateTransaction = (): JSX.Element => {
     userType: USER_TYPE_TEXT.BUYER,
     currency: VALID_CURRENCY[0],
   });
+  const [buyerCount, setBuyerCount] = useState(null);
+  const [buyerCountOpposite, setBuyerCountOpposite] = useState(null);
+  const [enableMultiBuyer, setEnableMultiBuyer] = useState(false);
+  const [enableMultiBuyerOpposite, setEnableMultiBuyerOpposite] = useState(false);
+  const [buyers, setBuyers] = useState([]);
+  const [buyersOpposite, setBuyersOpposite] = useState([]);
   const [isManualsignature, setisManualSignature] = useState(true);
   const [buttonStatus, setButtonStatus] = useState("");
   const [isMatchAmount, setIsMatchAmount] = useState("");
@@ -64,7 +71,7 @@ const CreateTransaction = (): JSX.Element => {
   const [platformCharge, setPlatformCharge] = useState(0);
   const [leftAmount, setLeftAmount] = useState(0);
   const [countryPhone, setCountryPhone] = useState(0);
-  const [countryList, setCountryList] = useState<any[]>([]);
+  // const [countryList, setCountryList] = useState<any[]>([]);
   const [amountDiffrence, setAmountDiffrence] = useState("");
   const [addedDoc, setAddedDoc] = useState(false);
   const [RequriedDoc, setRequriedDoc] = useState<any>({});
@@ -163,15 +170,15 @@ const CreateTransaction = (): JSX.Element => {
     })
   }
 
-  const getNationalityInfo = (countryValue: string) => {
-    const found = countryList?.find(
-      (c: any) => c.isoCode === countryValue || c.name === countryValue
-    );
-    return {
-      kycNationality: countryValue || "United Arab Emirates",
-      nationalityName: found?.name || countryValue || "United Arab Emirates",
-    };
-  };
+  // const getNationalityInfo = (countryValue: string) => {
+  //   const found = countryList?.find(
+  //     (c: any) => c.isoCode === countryValue || c.name === countryValue
+  //   );
+  //   return {
+  //     kycNationality: countryValue || "United Arab Emirates",
+  //     nationalityName: found?.name || countryValue || "United Arab Emirates",
+  //   };
+  // };
   
   const gotoPreview = async () => {
     try {
@@ -224,9 +231,9 @@ const CreateTransaction = (): JSX.Element => {
           ...values,
           userAlias: userAlias,
           clientAlias: "TRUST",
-          dynamicInputFields: dynamicInputFields,
+          dynamicInputFields,
           documentList: RequriedDoc,
-          milestoneList: milestoneList,
+          milestoneList,
           milestoneCount: milestoneList.length,
           status: buttonStatus,
           countrycode: callingCode,
@@ -234,17 +241,21 @@ const CreateTransaction = (): JSX.Element => {
           customPoint: customFieldList,
           customAttach: customAttach,
           customAttachments: customAttachmentIds,
-          payoutAccountAlias: payoutAccount?.aliasName
-        }
-        // setContractStartedBy(requestBody.contractStartedBy);
-        requestBody.currency = formValues?.currency || 'AED';
-        if (requestBody?.contractStartedBy !== "ESCROW_ADVISOR") {
-          const sellerCountry =
-            requestBody?.contractStartedBy === "BUYER"
-              ? requestBody?.sellerCountry
-              : requestBody?.buyerCountry;
+          payoutAccountAlias: payoutAccount?.aliasName,
+        };
 
-          const buyerCountry = userData?.country;
+        requestBody.currency = formValues?.currency || "AED";
+
+        // === If NOT started by Escrow Advisor ===
+        if (requestBody?.contractStartedBy !== "ESCROW_ADVISOR") {
+          // const buyerEmail = requestBody.buyerContactEmail || userData?.email;
+          // const sellerEmail = requestBody.sellerContactEmail;
+          const buyerCountry = requestBody.buyerCountry || userData?.country;
+          const sellerCountry = requestBody.sellerCountry;
+
+          // // Get nationality info based on KYC
+          // const buyerKycData = await getNationalityWithKyc(buyerEmail, buyerCountry);
+          // const sellerKycData = await getNationalityWithKyc(sellerEmail, sellerCountry);
 
           setSellerDetails({
             name:
@@ -256,49 +267,62 @@ const CreateTransaction = (): JSX.Element => {
                 ? requestBody?.sellerContactEmail
                 : requestBody?.buyerContactEmail,
             countryAlias: sellerCountry,
-            ...getNationalityInfo(sellerCountry),
+            // ...getNationalityInfo(sellerCountry),
           });
-
           setBuyerDetails({
             name: userData?.name,
             email: userData?.email,
             countryAlias: buyerCountry,
-            ...getNationalityInfo(buyerCountry),
+            // ...getNationalityInfo(buyerCountry),
           });
 
           if (hasAdvisor) {
             const advisorCountry = requestBody?.advisorCountry;
+            // const advisorEmail = requestBody.advisorContactEmail;
+            // const advisorKycData = await getNationalityWithKyc(advisorEmail, advisorCountry);
+
             setAdvisorDetails({
               name: requestBody?.advisorContactName,
               email: requestBody?.advisorContactEmail,
               countryAlias: advisorCountry,
-              ...getNationalityInfo(advisorCountry),
+              // ...getNationalityInfo(advisorCountry),
             });
           }
-        } else {
+        } 
+        // === If started by ESCROW_ADVISOR ===
+        else {
+          // const sellerEmail = requestBody?.sellerContactEmail;
+          // const buyerEmail = requestBody?.buyerContactEmail;
+          // const advisorEmail = requestBody?.advisorContactEmail;
+
           const sellerCountry = requestBody?.sellerCountry;
           const buyerCountry = requestBody?.buyerCountry;
           const advisorCountry = requestBody?.advisorCountry;
+
+          // KYC checks for all three
+          // const sellerKycData = await getNationalityWithKyc(sellerEmail, sellerCountry);
+          // const buyerKycData = await getNationalityWithKyc(buyerEmail, buyerCountry);
+          // const advisorKycData = await getNationalityWithKyc(advisorEmail, advisorCountry);
 
           setSellerDetails({
             name: requestBody?.sellerContactName,
             email: requestBody?.sellerContactEmail,
             countryAlias: sellerCountry,
-            ...getNationalityInfo(sellerCountry),
+            // ...getNationalityInfo(sellerCountry),
           });
 
           setBuyerDetails({
             name: requestBody?.buyerContactName,
             email: requestBody?.buyerContactEmail,
             countryAlias: buyerCountry,
-            ...getNationalityInfo(buyerCountry),
+            // ...getNationalityInfo(buyerCountry),
           });
 
           setAdvisorDetails({
             name: requestBody?.advisorContactName,
             email: requestBody?.advisorContactEmail,
             countryAlias: advisorCountry,
-            ...getNationalityInfo(advisorCountry),
+            // ...getNationalityInfo(advisorCountry),
           });
         }
         if (hasAdvisor && values.advisorFeeType === 'PERCENT' && values.escrowAdvisorCommission) {
@@ -316,7 +340,7 @@ const CreateTransaction = (): JSX.Element => {
   }
   
   useEffect(() => {
-    console.log(userType)
+    
     if (formValues?.userType === "SELLER") {
       setFormValues((prev: any) => ({
         ...prev, payoutCurrency: payoutAccount?.accountCurrency
@@ -331,7 +355,7 @@ const CreateTransaction = (): JSX.Element => {
   useEffect(() => {
     getAllCountries()
       .then((response: any) => {
-        setCountryList(response?.data || []);
+        // setCountryList(response?.data || []);
         getUserData(UserAlias?.email)
           .then((res: any) => { 
             const countryName = response?.data.filter(
@@ -484,6 +508,32 @@ const CreateTransaction = (): JSX.Element => {
           return;
         } 
     }
+    // Validate buyers and buyersOpposite: ensure emails are present, valid and unique across both arrays
+    
+      const participants = [...(buyers || []), ...(buyersOpposite || [])].filter(Boolean);
+      if (participants.length) {
+        // simple email regex
+        const emailRegex = /^\S+@\S+\.\S+$/;
+        // check for missing/invalid emails
+        const invalid = participants.find(
+          (p: any) => !p?.email || !emailRegex.test((p.email || "").trim())
+        );
+        if (invalid) {
+          setLoading(false);
+          message.error("Please provide a valid email for all participants.");
+          return;
+        }
+        // check uniqueness (case-insensitive)
+        const emails = participants.map((p: any) => (p.email || "").trim().toLowerCase());
+        const duplicate = emails.find((e: string, i: number) => emails.indexOf(e) !== i);
+        if (duplicate) {
+          setLoading(false);
+          message.error(`Duplicate email detected: ${duplicate}`);
+          return;
+        }
+     }
+    
+
     if(buttonText === 'Preview'){
       gotoPreview();
       return false
@@ -602,6 +652,59 @@ const CreateTransaction = (): JSX.Element => {
           customAttachments: customAttachmentIds,
           payoutAccountAlias: payoutAccount?.aliasName
         };
+      
+        if(values.contractStartedBy === "BUYER"){ 
+          if(buyers.length){
+            requestBody.buyerList = buyers.map((item: any) => ({
+                email: item.email,
+                name: item.name,
+                contactNumber: item.contact,
+                countryAlias: item.country,
+                countrycode: item.callingCode,
+                role: "BUYER",
+                userType: "USER",
+                isMainUser: item.isMain,
+              }))
+            }
+          if(buyersOpposite.length){
+            requestBody.sellerList = buyersOpposite.map((item: any) => ({
+                email: item.email,
+                name: item.name,
+                contactNumber: item.contact,
+                countryAlias: item.country,
+                countrycode: item.callingCode,
+                role: "SELLER",
+                userType: "USER",
+                isMainUser: item.isMain,
+              }))
+          }
+        }else{
+            if(buyers.length){
+            requestBody.sellerList = buyers.map((item: any) => ({
+                email: item.email,
+                name: item.name,
+                contactNumber: item.contact,
+                countryAlias: item.country,
+                countrycode: item.callingCode,
+                role: "SELLER",
+                userType: "USER",
+                isMainUser: item.isMain,
+              }))
+            }
+          if(buyersOpposite.length){
+            requestBody.buyerList = buyersOpposite.map((item: any) => ({
+                email: item.email,
+                name: item.name,
+                contactNumber: item.contact,
+                countryAlias: item.country,
+                countrycode: item.callingCode,
+                role: "BUYER",
+                userType: "USER",
+                isMainUser: item.isMain,
+              }))
+          }
+        }
+
 
         if(values?.contractStartedBy === USER_TYPE_TEXT.BUYER) {
           requestBody.sourceOfFunds = sourceOfFundIds
@@ -812,6 +915,18 @@ const CreateTransaction = (): JSX.Element => {
                               formValues={formValues}
                               setFormValues={setFormValues}
                               form={form}
+                              buyers={buyers}
+                              setBuyers={setBuyers}
+                              buyersOpposite={buyersOpposite}
+                              setBuyersOpposite={setBuyersOpposite}
+                              buyerCount={buyerCount}
+                              setBuyerCount={setBuyerCount}
+                              buyerCountOpposite={buyerCountOpposite}
+                              setBuyerCountOpposite={setBuyerCountOpposite}
+                              enableMultiBuyer={enableMultiBuyer}
+                              setEnableMultiBuyer={setEnableMultiBuyer}
+                              enableMultiBuyerOpposite={enableMultiBuyerOpposite}
+                              setEnableMultiBuyerOpposite={setEnableMultiBuyerOpposite}
                               setCurrencySymbol={setCurrencySymbol}
                               userExists={userExists}
                               setUserExists={setUserExists}
@@ -889,7 +1004,14 @@ const CreateTransaction = (): JSX.Element => {
                               hasAdvisor={hasAdvisor}
                               isDraft={isDraft}
                             /> */}
-                            {/* <hr className="lightgrayHr" /> */}
+
+                            {/* start  */}
+                            
+                            {/* <MultiCounter
+
+                            /> */}
+
+                            {/* end  */}
                             <div className="titleText mt-4 mb-4">
                               Custom contract
                             </div>
@@ -1093,6 +1215,8 @@ const CreateTransaction = (): JSX.Element => {
           contractDetail={previewValue} 
           taxDetails={taxDetails} 
           buyerDetails={BuyerDetails} 
+          buyersOpposite={buyersOpposite}
+          buyers={buyers}
           sellerDetails={SellerDetails} 
           categoryName={categoryName} 
           itemName={itemName} 

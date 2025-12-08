@@ -55,8 +55,10 @@ const AddBankAccount = ():any => {
   const [newCountryList, setNewCountryList] = useState([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [loading, setLoading] =useState<any>(false);
-  const [accountType, setAccountType] = useState<string>("Acc No.");
+  const [accountType, setAccountType] = useState<string>("ACCOUNT_NUMBER");
   const [isBankManuallyEntered, setIsBankManuallyEntered] = useState(false)
+  const [bankNameInput, setBankNameInput] = useState<string>("");
+
   const initialBankListRef = useRef<any>()
 
   // const [isBankNameFocused, setBankNameFocused] = useState(false);
@@ -87,6 +89,22 @@ const AddBankAccount = ():any => {
       }
     }).catch(() => setLoading(false))
   },500)
+
+  const bankSearchDebounced = useDebounce((searchText: string) => {
+    if (!countryCode || !cityCode) return;
+    setLoading(true);
+
+    getReferenceDataListV2({
+      countryCode,
+      cityCode,
+      search: searchText   // <-- Add search field in API request
+    })
+      .then((res) => {
+        setReferenceData(res?.data?.institutionsList ?? []);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, 500);
   
   useEffect(() => {
     getBankDetails(UserAlias.userAlias)
@@ -233,32 +251,52 @@ const AddBankAccount = ():any => {
     citySearchDebounced(searchValue)
   }
 
-  const handleNameChange = (value: string, option: any) => {
+    const handleNameChange = (value: string, option: any) => {
     // setBankNameFocused(false)
-    setIsBankManuallyEntered(!option.value)
-    setRoutingCode(option.code ?? "");
-    setRoutingScheme(option.scheme ?? "");
+    setIsBankManuallyEntered(!option?.value)
+    setRoutingCode(option?.code ?? "");
+    setRoutingScheme(option?.scheme ?? "");
     form.setFieldValue("institutionName", value);
-    form.setFieldValue("routingCode", option.code);
-    form.setFieldValue("routingScheme", option.scheme);
+    setBankNameInput(value);
+    form.setFieldValue("routingCode", option?.code);
+    form.setFieldValue("routingScheme", option?.scheme);
   };
 
+
   const onBankSearch = (searchText: string) => {
-    if (searchText == null || searchText == "") setReferenceData(initialBankListRef.current)
-    setReferenceData(() => initialBankListRef.current.filter((data: any) => data.name.toLowerCase().includes(searchText.trim().toLowerCase())))
-  }
+    if (!searchText) {
+      setReferenceData(initialBankListRef.current || []);
+      return;
+    }
+    bankSearchDebounced(searchText);
+  };
+
 
   const handleClearBankName = () => {
     if (!isBankManuallyEntered) {
       setRoutingCode("");
       setRoutingScheme("");
-      form.setFieldValue("institutionName", undefined);
+      setBankNameInput("");
       form.setFieldValue("routingCode", undefined);
       form.setFieldValue("routingScheme", undefined);
     }
     setReferenceData(initialBankListRef.current)
     setIsBankManuallyEntered(false)
+    form.setFieldValue("institutionName", undefined);
+    setBankNameInput("");
   };
+
+  const validateBicSwiftCode = (_: any, value: string) => {
+    if (!value) return Promise.resolve();
+
+    const bicRegex = /^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/;
+
+    if (!bicRegex.test(value.toUpperCase())) {
+      return Promise.reject("Invalid BIC/SWIFT code format!");
+    }
+    return Promise.resolve();
+  };
+
 
   const handleClearCity = () => {
     form.setFieldValue("city", undefined);
@@ -571,6 +609,8 @@ const AddBankAccount = ():any => {
                             // onFocus={() => setBankNameFocused(true)}
                             // onBlur={() => setBankNameFocused(false)}
                             disabled={!cityCode}
+                            value={bankNameInput}                            
+                            notFoundContent={loading ? <Spin size="small" className="d-flex justify-content-center align-items-center pt-4 pb-4"/> : "No Banks available"}
                             options={
                               !loading && referenceData?.length > 0
                                 ? referenceData.map((value: any) => ({
@@ -611,7 +651,7 @@ const AddBankAccount = ():any => {
                         </div>
                         <InputText
                           fieldname="routingCode"
-                          className="inputField w-100 error-input"
+                          className="inputField w-100 error-input routing-code-input-field"
                           rules={[
                             {
                               required: true,
@@ -621,11 +661,13 @@ const AddBankAccount = ():any => {
                               whitespace: true,
                               message: "Enter valid code!",
                             },
+                            {
+                              validator: validateBicSwiftCode
+                            }
                           ]}
                         >
                           <Input
                             placeholder="Enter routing code here"
-                            style={{ width: "90%"}}
                             // onFocus={() => setIsBankRoutingCodeFocused(true)}
                             // onBlur={() => setIsBankRoutingCodeFocused(false)}
                             value={routingCode}
@@ -641,7 +683,7 @@ const AddBankAccount = ():any => {
                             overlayClassName="custom-tooltip signupTooltip"
                             placement="topRight"
                           >
-                            <span className="pwd_info" style={{ marginLeft: 8 }}>
+                            <span className="pwd_info" >
                               <InfoCircleOutlined />
                             </span>
                           </Tooltip>
@@ -663,6 +705,16 @@ const AddBankAccount = ():any => {
                               whitespace: true,
                               message: "Enter valid scheme!",
                             },
+                            {
+                              validator: (_: any, value: string) => {
+                                if (!value) return Promise.resolve();
+                                const allowedSchemes = ["BIC", "SWIFT"];
+                                if (!allowedSchemes.includes(value.toUpperCase())) {
+                                  return Promise.reject("Routing scheme must be BIC or SWIFT!");
+                                }
+                                return Promise.resolve();
+                              }
+                            }
                           ]}
                         >
                           <Input

@@ -1791,15 +1791,15 @@ const CompanyStep3 = ():any => {
               <div className="d-flex w-100">
                 <Radio.Group onChange={async(e:any)=>{handleNationalityRadioChange(e?.target?.value)}} className="d-flex justify-content-between" value={nationalityId} >
 
-                {basicDetails?.countryofIncorporation === 116869 || 
+                {/* {basicDetails?.countryofIncorporation === 116869 || 
               (!selectedNationality  || selectedNationality.toUpperCase() === "UNITED ARAB EMIRATES") ? (
-                <>
+                <> */}
                   <Radio value="NATIONAL_ID" className="me-4">National ID</Radio>
                   <Radio value="PASSPORT">Passport</Radio>
-                </>
-              ) : (
-                <Radio value="PASSPORT">Passport</Radio>
-              )}
+                {/* </>
+              // ) : (
+              //   <Radio value="PASSPORT">Passport</Radio>
+              // )} */}
 
                 </Radio.Group>
               </div>

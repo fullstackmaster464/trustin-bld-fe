@@ -56,8 +56,9 @@ export default function AddBankAccountModal({
   const [newCountryList, setNewCountryList] = useState([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [loading, setLoading] = useState<any>(false);
-  const [accountType, setAccountType] = useState<string>("Acc No.");
+  const [accountType, setAccountType] = useState<string>("ACCOUNT_NUMBER");
   const [isBankManuallyEntered, setIsBankManuallyEntered] = useState(false);
+  const [bankNameInput, setBankNameInput] = useState<string>("");
   const initialBankListRef = useRef<any>();
 
   // const [isBankNameFocused, setBankNameFocused] = useState(false);
@@ -80,6 +81,22 @@ export default function AddBankAccountModal({
   const setWidthVal = () => {
     setWidth(document.body.clientWidth);
   };
+
+  const bankSearchDebounced = useDebounce((searchText: string) => {
+    if (!countryCode || !cityCode) return;
+    setLoading(true);
+
+    getReferenceDataListV2({
+      countryCode,
+      cityCode,
+      search: searchText   // <-- Add search field in API request
+    })
+      .then((res) => {
+        setReferenceData(res?.data?.institutionsList ?? []);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, 500);
 
   const citySearchDebounced = useDebounce((searchValue: string) => {
     getCitiesList(countryCode, searchValue)
@@ -136,7 +153,14 @@ export default function AddBankAccountModal({
           if (response?.status === 201 || response?.status === 200) {
             setIsModalVisible(true);
           }
+          setOpen(false);
           onSuccess();
+          form.resetFields();
+          setBankNameInput("");
+          setRoutingCode("");
+          setRoutingScheme("");
+          setCityCode("");
+          setCountryCode("");
           setLoading(false);
         })
         .catch((e) => {
@@ -228,34 +252,45 @@ export default function AddBankAccountModal({
 
   const handleNameChange = (value: string, option: any) => {
     // setBankNameFocused(false);
-    setIsBankManuallyEntered(!option.value);
-    setRoutingCode(option.code ?? "");
-    setRoutingScheme(option.scheme ?? "");
+    setIsBankManuallyEntered(!option?.value);
+    setRoutingCode(option?.code ?? "");
+    setRoutingScheme(option?.scheme ?? "");
     form.setFieldValue("institutionName", value);
-    form.setFieldValue("routingCode", option.code);
-    form.setFieldValue("routingScheme", option.scheme);
+    setBankNameInput(value);
+    form.setFieldValue("routingCode", option?.code);
+    form.setFieldValue("routingScheme", option?.scheme);
   };
 
   const onBankSearch = (searchText: string) => {
-    if (searchText == null || searchText == "")
-      setReferenceData(initialBankListRef.current);
-    setReferenceData(() =>
-      initialBankListRef.current.filter((data: any) =>
-        data.name.toLowerCase().includes(searchText.trim().toLowerCase())
-      )
-    );
+    if (!searchText) {
+      setReferenceData(initialBankListRef.current || []);
+      return;
+    }
+    bankSearchDebounced(searchText);
+  };
+
+  const validateBicSwiftCode = (_: any, value: string) => {
+    if (!value) return Promise.resolve();
+
+    const bicRegex = /^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/;
+
+    if (!bicRegex.test(value.toUpperCase())) {
+      return Promise.reject("Invalid BIC/SWIFT code format!");
+    }
+    return Promise.resolve();
   };
 
   const handleClearBankName = () => {
     if (!isBankManuallyEntered) {
       setRoutingCode("");
       setRoutingScheme("");
-      form.setFieldValue("institutionName", undefined);
       form.setFieldValue("routingCode", undefined);
       form.setFieldValue("routingScheme", undefined);
     }
     setReferenceData(initialBankListRef.current);
     setIsBankManuallyEntered(false);
+    form.setFieldValue("institutionName", undefined);
+    setBankNameInput("");
   };
 
   const handleClearCity = () => {
@@ -581,6 +616,8 @@ export default function AddBankAccountModal({
                 // onFocus={() => setBankNameFocused(true)}
                 // onBlur={() => setBankNameFocused(false)}
                 disabled={!cityCode}
+                value={bankNameInput}
+                notFoundContent={loading ? <Spin size="small" className="d-flex justify-content-center align-items-center pt-4 pb-4"/> : "No Banks available"}
                 options={
                   !loading && referenceData?.length > 0
                     ? referenceData.map((value: any) => ({
@@ -633,6 +670,9 @@ export default function AddBankAccountModal({
                     whitespace: true,
                     message: "Enter valid code!",
                   },
+                  {
+                    validator: validateBicSwiftCode
+                  }
                 ]}
               >
                 <Input
@@ -674,6 +714,16 @@ export default function AddBankAccountModal({
                     whitespace: true,
                     message: "Enter valid scheme!",
                   },
+                  {
+                    validator: (_: any, value: string) => {
+                      if (!value) return Promise.resolve();
+                      const allowedSchemes = ["BIC", "SWIFT"];
+                      if (!allowedSchemes.includes(value.toUpperCase())) {
+                        return Promise.reject("Routing scheme must be BIC or SWIFT!");
+                      }
+                      return Promise.resolve();
+                    }
+                  }
                 ]}
               >
                 <Input

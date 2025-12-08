@@ -382,7 +382,7 @@ const UserDashboard = ():any => {
       },
     });
   };
-
+  
   const columns: object[] = [
     {
       title: "Transaction id",
@@ -413,13 +413,14 @@ const UserDashboard = ():any => {
       dataIndex: "userAlias",
       sorter: false,
       render: (_text: string, value: any) => {
-        return LoginUserAlias == value.sellerAlias
-          ? "SELLER"
-          : LoginUserAlias == value.buyerAlias
-          ? "BUYER"
-          : LoginUserAlias == value?.escrowAdvisorAlias
-          ? "ESCROW ADVISOR"
-          : "";
+        return value?.myRole ?  value.myRole : 
+               (LoginUserAlias == value.sellerAlias
+                ? "SELLER"
+                : LoginUserAlias == value.buyerAlias
+                ? "BUYER"
+                : LoginUserAlias == value?.escrowAdvisorAlias
+                ? "ESCROW ADVISOR"
+                : "");
       },
     },
     {
@@ -559,9 +560,10 @@ const UserDashboard = ():any => {
                   />
                 }
               </div>
-
+          
               <div className="button-container d-flex align-items-center">
-              {(text === "ADD_FUND") && values.contractStartedBy === "BUYER" && (!values.sourceOfFunds || (values.sourceOfFunds.length > 0 && values.sourceOfFundStatus === "APPROVED")) &&
+                {/* values.contractStartedBy === "BUYER" && values.myRole === "BUYER" */}
+              {(text === "ADD_FUND") && values.contractStartedBy === "BUYER" && values?.buyerAlias === userAlias && (!values.sourceOfFunds || (values.sourceOfFunds.length > 0 && values.sourceOfFundStatus === "APPROVED")) &&
                   <Button
                     className="add-itemtype w-auto"
                     onClick={() =>
@@ -571,17 +573,22 @@ const UserDashboard = ():any => {
                     Manage funds
                   </Button>
                 }
-
-                {text === "UPLOAD_DOC" && (
+      
+      
+                {text === "UPLOAD_DOC" && values?.sellerAlias === userAlias &&  (
                   (values?.isMilestone 
                     ? (values?.transactions?.some((milestone: { isTransactionVerified: boolean; isActive: boolean}) => 
                       milestone.isTransactionVerified === true && 
-                      milestone.isActive === true)
+                      milestone.isActive === true 
+                    )
                     ) : true 
                   ) &&
                   <Button
                       className="add-itemtype w-auto"
-                      onClick={() =>navigate(TransactionDetail + "/" + values?.aliasName, { state: { triggerButton: "true" } })}
+                      onClick={() => {
+                        navigate(TransactionDetail + "/" + values?.aliasName, { state: { triggerButton: "true" } })
+                      }
+                      }
                     >
                       + Add document
                     </Button>
@@ -590,7 +597,7 @@ const UserDashboard = ():any => {
                 {(values?.isMilestone 
                     ? values?.transactions?.some((milestone: { documentStatus: string; }) => milestone.documentStatus === "UPLOADED") 
                     : values?.transactions?.[0]?.documentStatus === "UPLOADED"
-                  )  && values?.contractAction === "VERIFY_DOC" &&  values?.contractAction != "VERIFIED" &&
+                  )  && values?.contractAction === "VERIFY_DOC" && values?.buyerAlias === userAlias &&  values?.contractAction != "VERIFIED" &&
                   <Button
                     className="add-itemtype w-auto"
                     onClick={() => navigate(TransactionDetail + "/" + values?.aliasName, { state: { triggerButton: "true" } })}

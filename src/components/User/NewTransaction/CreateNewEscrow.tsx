@@ -8,9 +8,9 @@ import {
   Tooltip,
   message,
 } from "antd";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { getAllCountries } from "../../../services/masterData";
-import { DEFAULT_COUNTRY, DEFAULT_COUNTRY_NAME, DEFAULT_COUNTRY_UAE, MINIMUM_INVOICE_AMOUNT, PLATFORM_CHARGE_APPLIED_ON, TRANSACTION_TYPE, USER_TYPE_TEXT, VALID_CURRENCY, alphanumericRegex, containNumber, getLocalStorage, modifyCresetUserType } from "../../Common/Constants";
+import { DEFAULT_COUNTRY, DEFAULT_COUNTRY_NAME, DEFAULT_COUNTRY_UAE, MINIMUM_INVOICE_AMOUNT, PLATFORM_CHARGE_APPLIED_ON, TRANSACTION_TYPE, USER_TYPE_TEXT, VALID_CURRENCY, alphanumericRegex, containNumber, emailRegex, getLocalStorage, modifyCresetUserType } from "../../Common/Constants";
 import { getContractsDetails } from "../../../services/user";
 import {
   getAllItemType,
@@ -20,7 +20,7 @@ import {
   getPaymentDetails,
   getTxnData,
   getUserPlatformFees,
-  // getUserData,
+  getUserData,
 } from "../../../services/admin";
 import EscrowAdvisorTransactionDetails from "./EscrowAdvisorTransactionDetails";
 import TransactionDetails from "./TransactionDetails";
@@ -33,6 +33,17 @@ import { useDebounce } from "../../ManagerCheques/hook";
 import { useWatch } from "antd/es/form/Form";
 import PayoutAccount from "./PayoutAccount";
 import { calculateUserPlatformFee } from "../../Common/InvoiceCalculations";
+import { MultiPartyForm } from "./MultiPartyForm";
+
+const partyTemplate = (id: number, type: string) => ({
+  id,
+  name: "",
+  email: "",
+  contact: "",
+  country: "",
+  isMain: false,
+  type, // "BUYER" or "SELLER"
+});
 
 const CreateNewEscrow = (props: object|any):any => {
   const {
@@ -72,13 +83,25 @@ const CreateNewEscrow = (props: object|any):any => {
     setPayoutAccount,
     setOpenAddBankAccountModal,
     bankAccountList,
+    buyers,
+    setBuyers,
+    buyersOpposite,
+    setBuyersOpposite,
+    buyerCount,
+    setBuyerCount,
+    buyerCountOpposite,
+    setBuyerCountOpposite,
+    enableMultiBuyer,
+    setEnableMultiBuyer,
+    enableMultiBuyerOpposite,
+    setEnableMultiBuyerOpposite,
+    editContractDetails
   } = props;
-
   const enableAdvisor = process.env.ENABLE_ESCROW_ADVISOR === 'true';
   const [itemTypeList, setItemTypeList] = useState([]);
   const [categoryList, setCategoryList] = useState([]);
   const [inputFields, setInputFields] = useState([]);
-  const [countryList, setCountryList] = useState([]);
+  const [countryList, setCountryList] = useState<any[]>([]);
   const [currency, setCurrency] = useState("");
   const [isoCode, setIsoCode] = useState("");
   const [escrowisoCode, setEscrowIsoCode] = useState("");
@@ -98,14 +121,28 @@ const CreateNewEscrow = (props: object|any):any => {
   const [category, setCategory] = useState(null);
   const [errorMsg, setErrorMsg] = useState(false);
   const [minimumValue, setMinimumValue] = useState<any>();
+  
   console.warn(setMinimumValue);
   
-  // const [UserData, setUserData] = useState<any>({});
+  const [UserData, setUserData] = useState<any>({});
   const [Width, setWidth] = useState(document?.body?.clientWidth);
   const [representativeData, setRepresentativeData] = useState<any>();
   const [advisorCountry, setAdvisorcountry] = useState();
   const counterParty = formValues.userType === "BUYER" ? "sellerCountry" : "buyerCountry";
   const counterCountry = useWatch(counterParty, form);
+
+  // const [enableMultiBuyer, setEnableMultiBuyer] = useState(false);
+  // const [enableMultiBuyerOpposite, setEnableMultiBuyerOpposite] = useState(false);
+  // const [buyerCount, setBuyerCount] = useState<number | null>(null);
+  // const [buyerCountOpposite, setBuyerCountOpposite] = useState<number | null>(null);
+  // const [buyers, setBuyers] = useState<any[]>([]);
+  // const [buyersOpposite, setBuyersOpposite] = useState<any[]>([]);
+  const [selectedUserType, setSelectedUserType] = useState(
+    userType === USER_TYPE_TEXT.ESCROW_ADVISOR
+      ? USER_TYPE_TEXT.ESCROW_ADVISOR
+      : USER_TYPE_TEXT.BUYER
+  );
+   
   React.useEffect(() => {
     // const unblock = () => {
     //   setlocation(window?.location.pathname);
@@ -641,12 +678,12 @@ const onItemCategoryChange = async (itemCategoryAlias: any) => {
   };
 
 
-  // useEffect(() => {
-  //   const UserEmail = JSON.parse(getLocalStorage("auth")!);
-  //   getUserData(UserEmail?.email).then((response: any) => {
-  //     setUserData(response?.data);
-  //   })
-  // },[])
+  useEffect(() => {
+    const UserEmail = JSON.parse(getLocalStorage("auth")!);
+    getUserData(UserEmail?.email).then((response: any) => {
+      setUserData(response?.data);
+    })
+  },[])
 
 
 
@@ -969,6 +1006,501 @@ const onItemCategoryChange = async (itemCategoryAlias: any) => {
     }
   };
 
+  
+
+const handleBuyerCountChange = (count: number) => {
+  setBuyerCount(count);
+  const newList = Array.from({ length: count }, (_, i) => {
+    const item = partyTemplate(i + 1, selectedUserType); // BUYER or SELLER
+    
+    if (i === 0 && UserData) {
+      return {
+        ...item,
+        email: UserData?.email || "",
+        name: UserData.businessName && UserData.businessName.trim() ? UserData.businessName : (UserData.name || ""),
+        country: UserData?.countryAlias || "",
+        contact: UserData?.contactNumber || UserData?.companyPhoneNumber || "",
+        callingCode: UserData?.callingCode || UserData?.countryCallingCode || "",
+        isMain: true,
+        isAutoFilled:true
+      };
+    }
+    return item;
+  });
+  
+  setBuyers(newList);
+};
+
+  const handleBuyerCountOppositeChange = (count: number) => {
+    setBuyerCountOpposite(count);
+    const oppositeType =
+      selectedUserType === USER_TYPE_TEXT.BUYER ? USER_TYPE_TEXT.SELLER : USER_TYPE_TEXT.BUYER;
+    const list = Array.from({ length: count }, (_, i) => {
+      const item = partyTemplate(i + 1, oppositeType);
+      if (i === 0 && editContractDetails && enableMultiBuyerOpposite && oppositeType === USER_TYPE_TEXT.SELLER) {
+        return {
+          ...item,
+          name: editContractDetails?.sellerDetails?.name,
+          email: editContractDetails?.sellerDetails?.email,
+          contact: editContractDetails?.sellerDetails?.phoneNumber || editContractDetails?.sellerDetails?.contactNumber,
+          country: editContractDetails?.sellerDetails?.companyCountry || editContractDetails?.sellerDetails?.countryAlias,
+          isMain: true,
+          isAutoFilled:true
+        };
+      }else if (i === 0 && editContractDetails && enableMultiBuyerOpposite && oppositeType === USER_TYPE_TEXT.BUYER) {
+        return {
+          ...item,
+          name: editContractDetails?.buyerDetails?.name,
+          email: editContractDetails?.buyerDetails?.email,
+          contact: editContractDetails?.buyerDetails?.phoneNumber || editContractDetails?.buyerDetails?.contactNumber,
+          country: editContractDetails?.buyerDetails?.companyCountry || editContractDetails?.buyerDetails?.countryAlias,
+          isMain: true,
+          isAutoFilled:true
+        };
+      }
+
+      return item;
+    });
+    setBuyersOpposite(list);
+  };
+
+  const updateBuyerField = (id: number, key: string, value: any) => {
+    setBuyers((prev: any[]) =>
+      prev.map(buyer =>
+        buyer.id === id ? { ...buyer, [key]: value } : buyer
+      )
+    );
+  };
+
+  const updateBuyerFieldOpposite = (id: number, key: string, value: any) => {
+    setBuyersOpposite((prev: any[]) =>
+      prev.map(p => (p.id === id ? { ...p, [key]: value } : p))
+    );
+  };
+
+  const markAsMainParty = (id: number) => {
+    setBuyers((prev: any[]) =>
+      prev.map(party => ({
+        ...party,
+        isMain: party.id === id,
+      }))
+    );
+  };
+
+  const markAsMainPartyOpposite = (id: number) => { 
+    setBuyersOpposite((prev: any[]) =>
+      prev.map(p => ({ ...p, isMain: p.id === id }))
+    );
+  };
+
+  const onUserTypeChange = (value: any) => {
+    
+    
+    setSelectedUserType(value);
+
+    // MAIN reset
+    setEnableMultiBuyer(false);
+    setBuyerCount(null);
+    setBuyers([]);
+
+    // OPPOSITE reset
+    setEnableMultiBuyerOpposite(false);
+    setBuyerCountOpposite(null);
+    setBuyersOpposite([]);
+
+    form.setFieldsValue({ multipartyOption: "NO" });
+    form.setFieldsValue({ multipartyOptionOpposite: "NO" });
+  };
+  
+  useEffect(() => {
+    if (editContractDetails && editContractDetails?.contractStartedBy) {
+      setSelectedUserType(editContractDetails?.contractStartedBy)
+    } else {
+      setSelectedUserType(USER_TYPE_TEXT.BUYER)
+    }
+    if (enableMultiBuyer) {
+      form.setFieldsValue({ multipartyOption: "YES" });
+    }
+    if (enableMultiBuyerOpposite) {
+      form.setFieldsValue({ multipartyOptionOpposite: "YES" });
+    }
+  }, [editContractDetails]);
+  useEffect(() => {
+    if (!editContractDetails) return;
+
+    const startedBy = editContractDetails?.contractStartedBy;
+    setSelectedUserType(startedBy);
+
+    // BUYER SIDE
+    if (editContractDetails?.buyerList?.length > 1) {
+      setEnableMultiBuyer(true);
+      setBuyerCount(editContractDetails.buyerList.length);          
+
+      form.setFieldsValue({
+        multipartyOption: "YES",
+        multiCount: editContractDetails.buyerList.length,
+      });
+    }
+
+    // SELLER SIDE
+    if (editContractDetails?.sellerList?.length > 1) {
+      setEnableMultiBuyerOpposite(true);
+      setBuyerCountOpposite(editContractDetails.sellerList.length); 
+
+      form.setFieldsValue({
+        multipartyOptionOpposite: "YES",
+        multiCountOpposite: editContractDetails.sellerList.length,
+      });
+    }
+  }, [editContractDetails]);
+
+  useEffect(() => {
+    
+    if (enableMultiBuyer && buyerCount && !editContractDetails?.contractStartedBy) {  // todo: make this better
+      const newList = Array.from({ length: buyerCount }, (_, i) =>
+        partyTemplate(i + 1, selectedUserType)
+      );
+      setBuyers(newList);
+    }
+  }, [selectedUserType]);
+
+  useEffect(() => {
+    const UserEmail = JSON.parse(getLocalStorage("auth")!);
+
+    getUserData(UserEmail?.email).then((response: any) => {
+      const data = response?.data;
+      setUserData(data);
+
+      setBuyers((prev: any[]) => {
+      const hasSavedData = prev.some(
+        (p) => p.email || p.name || p.country || p.contact
+      );
+
+        if (hasSavedData) {
+          return prev; 
+        }
+        if (!prev.length) return prev;
+
+        const updated = prev.map((p, idx) =>
+          idx === 0
+            ? {
+                ...p,
+                email: data?.email || "",
+                name: data?.name || "",
+                country: data?.companyCountryIsoCode || "",
+                contact: data?.contactNumber || data?.companyPhoneNumber || "",
+                callingCode: data?.callingCode || data?.countryCallingCode || "",
+                isMain: true,
+              }
+            : p
+        );
+
+        const fieldName = getPartyFieldName(prev[0]);
+
+        form.setFieldsValue({
+          [fieldName]: {
+            1: {
+              email: data?.email || "",
+              name: data?.name || "",
+              country: data?.companyCountryIsoCode || "",
+              contact: data?.contactNumber || data?.companyPhoneNumber || "",
+            },
+          },
+        });
+
+        return updated;
+      });
+    });
+  }, [buyerCount]);
+
+  const getLabel = (type: string, field: string, id: number) => {
+    const title = type === USER_TYPE_TEXT.BUYER ? "Buyer" : "Seller";
+
+    switch (field) {
+      case "name":
+        return { label: `${title} ${id} name`, placeholder: `Enter ${title.toLowerCase()} ${id} name` };
+
+      case "email":
+        return { label: `${title} ${id} email`, placeholder: `Enter ${title.toLowerCase()} ${id} email` };
+
+      case "contact":
+        return { label: `${title} ${id} contact number`, placeholder: `Enter ${title.toLowerCase()} ${id} contact number` };
+
+      case "country":
+        return { label: `${title} ${id} country`, placeholder: `Enter ${title.toLowerCase()} ${id} country` };
+
+      default:
+        return { label: "", placeholder: "" };
+    }
+  };
+
+  const timer: any|undefined = useRef();
+      const debounce = (email: any,func: any, delay: any) => {
+        return () => {
+          clearTimeout(timer.current);
+          timer.current = setTimeout(() => {
+            func(email);
+          }, delay);
+        };
+      }; 
+
+
+  const searchUserByEmail = (id: number, email: string) => {
+    if (!emailRegex.test(email)) {
+      clearUser(id);
+      return;
+    }
+
+    const debounced = debounce(email, async (emailValue: string) => {
+      try {
+        const res = await getUserData(emailValue);
+        const data = res?.data;
+
+        if (!data) {
+          message.error("User not found");
+          clearUser(id);
+          return;
+        }
+
+        if (!["GUEST", "USER"].includes(data.userType)) {
+          message.error("User not found");
+          clearUser(id);
+          return;
+        }
+
+        setBuyers((prev: any[]) =>
+          prev.map((p, idx) =>
+            idx === id - 1
+              ? {
+                  ...p,
+                  email: data.email || "",
+                  name: data.businessName && data.businessName.trim() ? data.businessName : (data.name || ""),
+                  country: data.countryAlias || "",
+                  contact:
+                    data.contactNumber || data.companyPhoneNumber || "",
+                  callingCode:
+                    data.callingCode || data.countryCallingCode || "",
+                  isAutoFilled: true,
+                }
+              : p
+          )
+        );
+
+        form.setFieldsValue({
+          [getPartyFieldName({ type: selectedUserType })]: {
+            [id]: {
+              email: data.email || "",
+              name: data.businessName && data.businessName.trim() ? data.businessName : (data.name || ""),
+              country: data.countryAlias || "",
+              contact:
+                data.contactNumber || data.companyPhoneNumber || "",
+            },
+          },
+        });
+      } catch (err: any) {
+        if(err?.data?.statusCode == 403){
+             message.warning("User not found");
+        }else{
+            message.error("Something went wrong!");
+        }
+        // const hasUserNotFound = JSON.stringify(err).includes("User not found");
+        // if (hasUserNotFound) {
+        //   message.warning("User not found");
+        // } else {
+        //   message.error("Something went wrong!");
+        // }
+        clearUser(id);
+      }
+    }, 800);
+
+    debounced();
+  };
+  
+  const clearUser = (id: number) => {
+    setBuyers((prev: any[]) =>
+      prev.map((p, idx) =>
+        idx === id - 1
+          ? {
+              ...p,
+              name: "",
+              country: "",
+              contact: "",
+              callingCode: "",
+              isAutoFilled: false,
+            }
+          : p
+      )
+    );
+
+    form.setFieldsValue({
+      [getPartyFieldName({ type: selectedUserType })]: {
+        [id]: {
+          name: "",
+          country: "",
+          contact: "",
+        },
+      },
+    });
+  };
+
+  const searchUserByEmailOpposite = (id: number, email: string) => {
+    if (!emailRegex.test(email)) {
+      const oppositeType = selectedUserType === USER_TYPE_TEXT.BUYER ? USER_TYPE_TEXT.SELLER : USER_TYPE_TEXT.BUYER;
+      clearOppositeUser(id,oppositeType);
+      return;
+    }
+
+    const debounced = debounce(email, async (emailValue: string) => {
+      try {
+        const res = await getUserData(emailValue);
+        const data = res?.data;
+
+        if (!data || !["GUEST", "USER"].includes(data.userType)) {
+          message.warning("User not found");
+          const oppositeType = selectedUserType === USER_TYPE_TEXT.BUYER ? USER_TYPE_TEXT.SELLER : USER_TYPE_TEXT.BUYER;
+          clearOppositeUser(id,oppositeType);
+          return;
+        }
+
+        const oppositeType =
+          selectedUserType === USER_TYPE_TEXT.BUYER ? USER_TYPE_TEXT.SELLER : USER_TYPE_TEXT.BUYER;
+
+        setBuyersOpposite((prev: any[]) =>
+          prev.map((p) =>
+            p.id === id
+              ? {
+                  ...p,
+                  email: data.email || "",
+                  name: data.businessName && data.businessName.trim() ? data.businessName : (data.name || ""),
+                  country: data.countryAlias || "",
+                  contact: data.contactNumber || data.companyPhoneNumber || "",
+                  callingCode: data.callingCode || data.countryCallingCode || "",
+                  isAutoFilled: true,
+                }
+              : p
+          )
+        );
+
+        // Update form values correctly
+        const fieldName = getPartyFieldName({ type: oppositeType });
+
+        form.setFieldsValue({
+          [fieldName]: {
+            [id]: {
+              email: data.email || "",
+              name: data.businessName && data.businessName.trim() ? data.businessName : (data.name || ""),
+              country: data.countryAlias || "",
+              contact: data.contactNumber || data.companyPhoneNumber || "",
+            },
+          },
+        });
+      } catch (err: any) {
+        const hasUserNotFound = JSON.stringify(err).includes("User not found");
+        if (hasUserNotFound) {
+          message.warning("User not found");
+        } else {
+          message.error("Something went wrong!");
+        }
+        const oppositeType = selectedUserType === USER_TYPE_TEXT.BUYER ? USER_TYPE_TEXT.SELLER : USER_TYPE_TEXT.BUYER;
+        clearOppositeUser(id,oppositeType);
+      }
+    }, 800);
+
+    debounced();
+  };
+
+  const clearOppositeUser = (id: number , type: string) => {
+    setBuyersOpposite((prev: any[]) =>
+      prev.map((p, idx) =>
+        idx === id - 1
+          ? {
+              ...p,
+              name: "",
+              country: "",
+              contact: "",
+              callingCode: "",
+              isAutoFilled: false,
+            }
+          : p
+      )
+    );
+
+    form.setFieldsValue({
+      [getPartyFieldName({ type })]: {
+        [id]: {
+          name: "",
+          country: "",
+          contact: "",
+        },
+      },
+    });
+  };
+
+  useEffect(() => {
+    if (!buyersOpposite || buyersOpposite.length === 0) return;
+
+    const oppositeKey = formValues?.userType === "BUYER" ? "seller" : "buyer";
+    
+    const emailFieldName = `${oppositeKey}ContactEmail`;
+    const nameFieldName = `${oppositeKey}ContactName`;
+    const contactFieldName = `${oppositeKey}ContactNumber`;
+    const countryFieldName = `${oppositeKey}Country`; 
+
+    const currentOppositeEmail = form?.getFieldValue(emailFieldName) || "";
+    const currentOppositeName = form?.getFieldValue(nameFieldName) || "";
+    const currentOppositeContact = form?.getFieldValue(contactFieldName) || "";
+    const currentOppositeCountry = formValues?.[countryFieldName] || ""; 
+    
+    const updated = [...buyersOpposite];
+    if(!editContractDetails?.contractStartedBy){
+      const partyId = updated[0].id;
+
+      updated[0] = {
+          ...updated[0],
+          email: currentOppositeEmail,
+          name: currentOppositeName,
+          contact: currentOppositeContact,
+          country: currentOppositeCountry,
+          callingCode: callingCode || "",
+          isMain: true,
+          isAutoFilled: true,
+      };
+      
+      const listName = updated[0].type === "BUYER" ? "buyerList" : "sellerList";
+
+      form.setFieldsValue({
+          [listName]: {
+              [partyId]: { 
+                  email: updated[0].email,
+                  name: updated[0].name,
+                  country: updated[0].country,
+                  contact: updated[0].contact,
+              },
+          },
+      });
+    }
+    setBuyersOpposite(updated);
+  }, [
+    formValues.sellerContactEmail,
+    formValues.sellerContactName,
+    formValues.sellerCountry,
+    formValues.sellerContactNumber,
+
+    formValues.buyerContactEmail,
+    formValues.buyerContactName,
+    formValues.buyerCountry,
+    formValues.buyerContactNumber,
+    buyerCountOpposite,
+    callingCode,
+  ]);
+
+  const getPartyFieldName = (party: any) => {
+    return party.type === USER_TYPE_TEXT.BUYER
+      ? "buyerList"
+      : "sellerList";
+  };
+ 
+  
   return (
   <> 
     <div>
@@ -988,7 +1520,8 @@ const onItemCategoryChange = async (itemCategoryAlias: any) => {
               name="userType"
               onChange={(e: any) => {
                 setdidsubmit(1);
-                handleChange(e)
+                handleChange(e);
+                onUserTypeChange(e.target.value);
               }}
               buttonStyle="solid"
               className="stepDetails_medium fw-400 width-50-rem"
@@ -1000,7 +1533,120 @@ const onItemCategoryChange = async (itemCategoryAlias: any) => {
             </Radio.Group>
           </Form.Item>
         </Col>
-      </Row>      
+      </Row> 
+      <Row gutter={16}> 
+        <Col> 
+      
+          <div>
+            <span className="stepDetails fw-400 mb-2 mt-3 textOverflow" style={{whiteSpace: "wrap"}}>
+              {selectedUserType === USER_TYPE_TEXT.BUYER
+                ? "Do you want to enable multi-buyer?"
+                : "Do you want to enable multi-seller?"} 
+                  </span>
+          </div> 
+          <div>
+            <Form.Item className="mb-3 radioInput" name="multipartyOption"  initialValue="NO"> 
+              <Radio.Group
+                  onChange={(e) => {
+                  const value = e.target.value;
+                  setEnableMultiBuyer(value === "YES" ? true : false);
+
+                    if (value === "NO") {
+                      setBuyerCount(null);
+                      setBuyers([]);
+                      form.setFieldValue("multiCount", null)
+                    }
+                }}
+              >
+                <Radio value="YES">Yes</Radio>
+                <Radio value="NO">No</Radio>
+              </Radio.Group>
+            </Form.Item>
+          </div>
+          
+        </Col>
+             
+
+        {enableMultiBuyer && (
+          
+          <>
+            <Col span={Width < 992 ? 24 : 8}>
+              <div>
+                <span className="stepDetails fw-400 mb-2 mt-3 textOverflow" style={{whiteSpace: "wrap"}}>  
+                  {selectedUserType === USER_TYPE_TEXT.BUYER
+                    ? "Select number of buyers"
+                    : "Select number of sellers"}
+                </span>
+              </div>
+              <div>
+                <Form.Item 
+                  name="multiCount"
+                  className="w-100 inputField"
+                  rules={[
+                    {
+                      required: !isDraft,
+                      message: `Please select number of ${selectedUserType === USER_TYPE_TEXT.BUYER ? "buyers" : "sellers"}`,
+                    }
+                  ]}
+                >
+                  <Select
+                    placeholder={selectedUserType === USER_TYPE_TEXT.BUYER
+                    ? "Select number of Buyers"
+                    : "Select number of Sellers"}
+                    value={buyerCount || undefined}
+                    onChange={handleBuyerCountChange}
+                    options={[2, 3, 4, 5].map(n => ({ label: n, value: n }))}
+                  />
+                </Form.Item>
+              </div>
+            </Col>
+            <Col span={Width < 992 ? 24 : 8}>
+              <div>
+                <span className="stepDetails fw-400 mb-2 mt-3 textOverflow" style={{ whiteSpace: "wrap" }}>
+                  {selectedUserType === USER_TYPE_TEXT.BUYER
+                    ? "Select main buyer"
+                    : "Select main seller"}
+                </span>
+              </div>
+
+              <div>
+                <Form.Item className="w-100 inputField">
+                  <Select
+                    placeholder={`Select main ${selectedUserType === USER_TYPE_TEXT.BUYER ? "buyer" : "seller"}`}
+                    value={buyers.find((b: { isMain: any; }) => b.isMain)?.id || undefined}
+                    onChange={(id) => {
+                      markAsMainParty(id);
+                    }}
+                    options={buyers.map((p: { id: any; }, index: number) => ({
+                      label: `${selectedUserType === USER_TYPE_TEXT.BUYER ? "Buyer" : "Seller"} ${index + 1}`,
+                      value: p.id,
+                    }))}
+                  />
+                </Form.Item>
+              </div>
+            </Col>
+          </>
+        )}
+      </Row>
+      {buyerCount > 1 &&
+        <hr className="lightgrayHr mt-0" />
+      }
+      {/* Buyer List/Seller List */}
+      <MultiPartyForm
+        parties={buyers}
+        allOtherParties={buyersOpposite}
+        width={Width}
+        form={form}
+        isDraft={isDraft}
+        updatePartyField={updateBuyerField}
+        markAsMainParty={markAsMainParty}
+        validateContactNumber={validateContactNumber}
+        getLabel={getLabel}
+        countryList={countryList} 
+        searchUserByEmail={searchUserByEmail}
+      />
+
+      <hr className="lightgrayHr" />
       <Row>
         <Col span={Width < 992 ? 24 : 8} className="pe-4">
           <p 
@@ -1807,6 +2453,122 @@ const onItemCategoryChange = async (itemCategoryAlias: any) => {
           </Form.Item>
         </Col>
       </Row>
+      
+      {buyerCountOpposite > 1 &&
+        <hr className="lightgrayHr mt-0" />
+      }
+      <Row gutter={16}> 
+        <Col> 
+          <div>
+            <span className="stepDetails fw-400 mb-2 mt-3 textOverflow" style={{whiteSpace: "wrap"}}>
+              {
+                selectedUserType === USER_TYPE_TEXT.BUYER
+                  ? "Do you want to enable multi-seller?"
+                  : "Do you want to enable multi-buyer?"
+              }  
+            </span>
+          </div>
+
+          <div>
+            <Form.Item className="mb-3 radioInput" name="multipartyOptionOpposite" initialValue="NO">
+              <Radio.Group
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setEnableMultiBuyerOpposite(value === "YES");
+
+                    if (value === "NO") {
+                      setBuyerCountOpposite(null);
+                      setBuyersOpposite([]);
+                      form.setFieldValue("multiCountOpposite", null);
+                    }
+                }}
+              >
+                <Radio value="YES">Yes</Radio>
+                <Radio value="NO">No</Radio>
+              </Radio.Group>
+            </Form.Item>
+          </div>
+        </Col>
+
+        {enableMultiBuyerOpposite && (
+          <>
+          <Col span={Width < 992 ? 24 : 8}>
+            <div>
+              <span className="stepDetails fw-400 mb-2 mt-3 textOverflow" style={{whiteSpace: "wrap"}}>
+                {
+                  selectedUserType === USER_TYPE_TEXT.BUYER
+                    ? "Select number of sellers"
+                    : "Select number of buyers"
+                }
+              </span>
+            </div>
+
+            <div>
+              <Form.Item 
+                name="multiCountOpposite"
+                className="w-100 inputField"
+                rules={[
+                  {
+                    required: !isDraft,
+                    message: `Please select number of ${selectedUserType === USER_TYPE_TEXT.BUYER ? "sellers" : "buyers"}`,
+                  }
+                ]}
+              >
+                <Select
+                  placeholder={
+                    selectedUserType === USER_TYPE_TEXT.BUYER
+                      ? "Select number of Sellers"
+                      : "Select number of Buyers"
+                  }
+                  value={buyerCountOpposite || undefined}
+                  onChange={handleBuyerCountOppositeChange}
+                  options={[2, 3, 4, 5].map(n => ({ label: n, value: n }))}
+                />
+              </Form.Item>
+            </div>
+          </Col>
+          <Col span={Width < 992 ? 24 : 8}>
+            <div>
+              <span className="stepDetails fw-400 mb-2 mt-3 textOverflow" style={{ whiteSpace: "wrap" }}>
+                {selectedUserType === USER_TYPE_TEXT.BUYER
+                  ? "Select main seller"
+                  : "Select main buyer"}
+              </span>
+            </div>
+
+            <div>
+              <Form.Item className="w-100 inputField">
+                <Select
+                  placeholder={`Select main ${selectedUserType === USER_TYPE_TEXT.BUYER ? "seller" : "buyer"}`}
+                  value={buyersOpposite.find((b: { isMain: any; }) => b.isMain)?.id || undefined}
+                  onChange={(id) => {
+                    markAsMainPartyOpposite(id);
+                  }}
+                  options={buyersOpposite.map((p: { id: any; }, index: number) => ({
+                    label: `${selectedUserType === USER_TYPE_TEXT.BUYER ? "Seller" : "Buyer"} ${index + 1}`,
+                    value: p.id,
+                  }))}
+                />
+              </Form.Item>
+            </div>
+          </Col>
+          </>
+        )}
+      </Row>
+      {/* Opposite Party Form */}
+      <MultiPartyForm
+        parties={buyersOpposite}
+        allOtherParties={buyers}
+        width={Width}
+        form={form}
+        isDraft={isDraft}
+        updatePartyField={updateBuyerFieldOpposite} 
+        markAsMainParty={markAsMainPartyOpposite} 
+        validateContactNumber={validateContactNumber}
+        searchUserByEmail={searchUserByEmailOpposite} 
+        getLabel={getLabel}
+        countryList={countryList}
+      />
     </div> 
    </>
   );

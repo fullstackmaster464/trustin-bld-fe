@@ -56,13 +56,30 @@ const EditBankAccount = () => {
     message: "",
     status: false
   });
-  const [accountType, setAccountType] =useState<string>("");
+  const [accountType, setAccountType] =useState<string>("ACCOUNT_NUMBER");
   const [isBankManuallyEntered, setIsBankManuallyEntered] = useState(false)
+  const [bankNameInput, setBankNameInput] = useState<string>("");
   const initialBankListRef = useRef<any>()
 
   // const [isBankNameFocused, setBankNameFocused] = useState(false);
   // const [isBankRoutingCodeFocused, setIsBankRoutingCodeFocused] = useState(false);
   // const [isBankRoutingSchemeFocused, setIsBankRoutingSchemeFocused] = useState(false);
+
+  const bankSearchDebounced = useDebounce((searchText: string) => {
+    if (!countryCode || !cityCode) return;
+    setLoading(true);
+
+    getReferenceDataListV2({
+      countryCode,
+      cityCode,
+      search: searchText   // <-- Add search field in API request
+    })
+      .then((res) => {
+        setReferenceData(res?.data?.institutionsList ?? []);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, 500);
 
   const citySearchDebounced = useDebounce((searchValue: string) => {
     getCitiesList(countryCode, searchValue)
@@ -127,6 +144,7 @@ const EditBankAccount = () => {
         form.setFieldsValue({
           institutionName: currentDetail?.[0]?.institutionName,
         });
+        setBankNameInput(currentDetail?.[0]?.institutionName ?? "");
         form.setFieldsValue({ routingCode: currentDetail?.[0]?.routingCode });
         form.setFieldsValue({
           routingScheme: currentDetail?.[0]?.routingScheme,
@@ -135,7 +153,7 @@ const EditBankAccount = () => {
         setRoutingCode(currentDetail?.[0]?.routingCode);
         setRoutingScheme(currentDetail?.[0]?.routingScheme);
         setBankAlias(currentDetail?.[0]?.aliasName);
-        const account = currentDetail?.[0]?.type === "IBAN" ? "IBAN" : "Acc No.";
+        const account = currentDetail?.[0]?.type === "IBAN" ? "IBAN" : "ACCOUNT_NUMBER";
         setAccountType(account)
       })
       .catch(() => {
@@ -261,18 +279,33 @@ const EditBankAccount = () => {
 
   const handleNameChange = (value: string, option: any) => {
     // setBankNameFocused(false)
-    setIsBankManuallyEntered(!option.value)
-    setRoutingCode(option.code ?? "");
-    setRoutingScheme(option.scheme ?? "");
+    setIsBankManuallyEntered(!option?.value)
+    setRoutingCode(option?.code ?? "");
+    setRoutingScheme(option?.scheme ?? "");
     form.setFieldValue("institutionName", value);
-    form.setFieldValue("routingCode", option.code);
-    form.setFieldValue("routingScheme", option.scheme);
+    setBankNameInput(value);
+    form.setFieldValue("routingCode", option?.code);
+    form.setFieldValue("routingScheme", option?.scheme);
   };
 
   const onBankSearch = (searchText: string) => {
-    if (searchText == null || searchText == "") setReferenceData(initialBankListRef.current)
-    setReferenceData(() => initialBankListRef?.current?.filter((data: any) => data.name.toLowerCase().includes(searchText.trim().toLowerCase())))
-  }
+    if (!searchText) {
+      setReferenceData(initialBankListRef.current || []);
+      return;
+    }
+    bankSearchDebounced(searchText);
+  };
+
+  const validateBicSwiftCode = (_: any, value: string) => {
+    if (!value) return Promise.resolve();
+
+    const bicRegex = /^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/;
+
+    if (!bicRegex.test(value.toUpperCase())) {
+      return Promise.reject("Invalid BIC/SWIFT code format!");
+    }
+    return Promise.resolve();
+  };
 
   const sort = (arrayList:any) => {
     return arrayList.sort(function (a:any, b:any) {
@@ -292,12 +325,13 @@ const EditBankAccount = () => {
     if (!isBankManuallyEntered) {
       setRoutingCode("");
       setRoutingScheme("");
-      form.setFieldValue("institutionName", undefined);
       form.setFieldValue("routingCode", undefined);
       form.setFieldValue("routingScheme", undefined);
     }
     setReferenceData(initialBankListRef.current)
     setIsBankManuallyEntered(false)
+    form.setFieldValue("institutionName", undefined);
+    setBankNameInput("");
   };
 
   const handleClearCity = () => {
@@ -629,7 +663,8 @@ const EditBankAccount = () => {
                               // onFocus={() => setBankNameFocused(true)}
                               // onBlur={() => setBankNameFocused(false)}
                               disabled={!cityCode}
-                              value={form.getFieldValue("institutionName")}
+                              value={bankNameInput}
+                              notFoundContent={loading ? <Spin size="small" className="d-flex justify-content-center align-items-center pt-4 pb-4"/> : "No Banks available"}
                               options={
                                 !loading && referenceData?.length > 0
                                   ? referenceData.map((value: any) => ({
@@ -679,6 +714,9 @@ const EditBankAccount = () => {
                                 whitespace: true,
                                 message: "Enter valid code!",
                               },
+                              {
+                                validator: validateBicSwiftCode
+                              }
                             ]}
                           >
                             <Input
@@ -721,6 +759,16 @@ const EditBankAccount = () => {
                                 whitespace: true,
                                 message: "Enter valid scheme!",
                               },
+                              {
+                                validator: (_: any, value: string) => {
+                                  if (!value) return Promise.resolve();
+                                  const allowedSchemes = ["BIC", "SWIFT"];
+                                  if (!allowedSchemes.includes(value.toUpperCase())) {
+                                    return Promise.reject("Routing scheme must be BIC or SWIFT!");
+                                  }
+                                  return Promise.resolve();
+                                }
+                              }
                             ]}
                           >
                             <Input

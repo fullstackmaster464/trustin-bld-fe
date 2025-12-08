@@ -2891,10 +2891,10 @@ const CompanyStep4 = ():any => {
                                                 className="d-flex"
                                                 value={documentType}     
                                                 options={
-                                                  isUAE || documentType === "NATIONAL_ID" ? [
-                                                    {value: 'NATIONAL_ID', label: 'National ID'},
-                                                    {value: 'PASSPORT', label: 'Passport'}
-                                                  ] : [{value: 'PASSPORT', label: 'Passport'}]
+                                                  // isUAE || documentType === "NATIONAL_ID" ? [
+                                                [    {value: 'NATIONAL_ID', label: 'National ID'},
+                                                    {value: 'PASSPORT', label: 'Passport'}]
+                                                  // ] : [{value: 'PASSPORT', label: 'Passport'}]
                                                 }
                                               >
                                                 

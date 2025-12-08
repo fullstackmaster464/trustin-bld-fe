@@ -1563,13 +1563,13 @@ if(uploadFinishModal == true){
                   />
                   </Checkbox>
                 </Form.Item>
-                <div className="d-flex gap-3">
+                <div className={Width > 400 ? "d-flex gap-3": "d-flex gap-2 flex-column"}>
                   {btnText === "Accept" && (
                       <Button
                       key="submit"
                       style={{width:'140px'}}
                       type="primary"
-                      className="modal-button-cancel mt-2"
+                      className={Width > 400 ? "modal-button-cancel mt-2": "modal-button-cancel mt-2 w-auto"}
                       onClick={() => {
                         setShowRejectWarning(true)
                       }}
@@ -1585,7 +1585,7 @@ if(uploadFinishModal == true){
                         htmlType="submit"
                         loading={loading}
                         onClick={() => setButtonStatus("accept")}
-                        className="modal-button mt-2"
+                        className={Width > 400 ? "modal-button mt-2": "modal-button mt-2 w-auto"}
                       >
                         {btnText}
                       </Button>

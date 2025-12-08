@@ -25,7 +25,7 @@ const BankAccountType = (props: object | any): any => {
             optionFilterProp="children" 
             dropdownStyle={{ width: '80px' }}
         >
-            <Option key={"ACCOUNT"} value={"ACCOUNT"}>Acc No.</Option>
+            <Option key={"ACCOUNT_NUMBER"} value={"ACCOUNT_NUMBER"}>Acc No.</Option>
             <Option key={"IBAN"} value={"IBAN"}>IBAN</Option>
         </Select> 
     </>

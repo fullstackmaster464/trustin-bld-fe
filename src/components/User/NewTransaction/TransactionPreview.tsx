@@ -31,8 +31,7 @@ import { InfoCircleOutlined } from "@ant-design/icons";
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 const TransactionPreview = (props: any): any => {
-  const { contractDetail, escrowAdvisorDetails, sourceOfFundUrls, taxDetails, buyerDetails, sellerDetails, categoryName, itemName, signature, BuyerCountry, invoiceCalculations, customAttachUrl, customAttachmentUrls, payoutAccount } = props;
-
+  const { contractDetail, buyers, buyersOpposite, escrowAdvisorDetails, sourceOfFundUrls, taxDetails, buyerDetails, sellerDetails, categoryName, itemName, signature, BuyerCountry, invoiceCalculations, customAttachUrl, customAttachmentUrls, payoutAccount } = props;
   const { Step } = Steps;
   const userType = JSON.parse(getLocalStorage("auth")!)?.userType;
   const userAlias = JSON.parse(getLocalStorage("auth")!)?.userAlias;
@@ -114,6 +113,33 @@ const TransactionPreview = (props: any): any => {
     }
   }, [payoutAccount?.currency, payoutAccount?.accountCurrency])  
 
+  // Main buyer 
+  const mainBuyer = buyers?.find((item: any) => item.isMain);
+  const normalizedBuyer = mainBuyer
+    ? {
+      ...mainBuyer,
+      countryAlias: mainBuyer.country,
+      companyCountry: mainBuyer.country,
+      countrycode: mainBuyer.callingCode,
+      contactNumber: mainBuyer.contact,
+      isMainUser: mainBuyer.isMain,
+      nationalityName: mainBuyer.nationalityName || mainBuyer.kycNationality || "", 
+    }
+    : undefined;
+  const updatedBuyerDetails = normalizedBuyer || buyerDetails;
+  // Main seller
+  const mainSeller = buyersOpposite?.find((item: any) => item.isMain);
+  const normalizedSeller = mainSeller
+    ? {
+        ...mainSeller,
+        countryAlias: mainSeller.country,
+        countrycode: mainSeller.callingCode,
+        contactNumber: mainSeller.contact,
+        isMainUser: mainSeller.isMain,
+        nationalityName: mainSeller.nationalityName || mainSeller.kycNationality || "",
+      }
+    : undefined;
+  const updatedSellerDetails = normalizedSeller || sellerDetails;
   return (
     <div className="">
       <div className="d-flex">
@@ -149,25 +175,25 @@ const TransactionPreview = (props: any): any => {
                   </div>
                   <div className="d-flex my-3">
                     <Image src={WhiteUserFull} alt="box" preview={false} />
-                    <div className="whiteTitle18 px-3">{buyerDetails?.name}</div>
+                    <div className="whiteTitle18 px-3">{updatedBuyerDetails?.name}</div>
                   </div>
                   <div className="d-flex my-3">
                     <Image src={WhiteEmail} alt="box" preview={false} />
-                    <div className="whiteTitle18 px-3">{buyerDetails?.email}</div>
+                    <div className="whiteTitle18 px-3">{updatedBuyerDetails?.email}</div>
                   </div>
                   <div className="d-flex my-3">
                     <Image src={Globe} alt="box" preview={false} />
                     <div className="whiteTitle18 ps-3 noWrap overflowText">
                       <Tooltip
                         title={
-                          (BuyerCountry ? BuyerCountry : buyerDetails?.countryAlias) &&
-                          (BuyerCountry?.length || buyerDetails?.countryAlias?.length) * 7 > 136
-                            ? BuyerCountry || buyerDetails?.countryAlias
+                          (BuyerCountry ? BuyerCountry : updatedBuyerDetails?.companyCountry) &&
+                          (BuyerCountry?.length || updatedBuyerDetails?.companyCountry?.length) * 7 > 136
+                            ? BuyerCountry || updatedBuyerDetails?.companyCountry
                             : null
                         }
                         overlayClassName='custom-tooltip'
                       >
-                        {BuyerCountry ? BuyerCountry : buyerDetails?.countryAlias}
+                        {BuyerCountry ? BuyerCountry : updatedBuyerDetails?.companyCountry}
                       </Tooltip>
                     </div>
                     <Tooltip
@@ -179,18 +205,19 @@ const TransactionPreview = (props: any): any => {
                       </span>
                     </Tooltip>
                   </div>
+                  {(updatedBuyerDetails?.nationalityName || updatedBuyerDetails?.kycNationality)&&
                   <div className="d-flex my-3">
                     <Image src={Flag} alt="box" preview={false} />                           
                     <div className="whiteTitle18 ps-3 noWrap overflowText">
                       <Tooltip
                         title={
-                          (buyerDetails?.kycNationality?.length || buyerDetails?.nationalityName?.length) * 7 > 136
-                            ? (buyerDetails?.kycNationality || buyerDetails?.nationalityName)
+                          (updatedBuyerDetails?.kycNationality?.length || updatedBuyerDetails?.nationalityName?.length) * 7 > 136
+                            ? (updatedBuyerDetails?.kycNationality || updatedBuyerDetails?.nationalityName)
                             : null
                         }
                         overlayClassName='custom-tooltip'
                       >
-                        {buyerDetails?.kycNationality || buyerDetails?.nationalityName}
+                        {updatedBuyerDetails?.kycNationality || updatedBuyerDetails?.nationalityName}
                       </Tooltip>
                     </div>
                     <Tooltip
@@ -202,6 +229,7 @@ const TransactionPreview = (props: any): any => {
                       </span>
                     </Tooltip>
                   </div>
+                  }
                   <div className="d-flex my-3">
                     <Image src={Payment} alt="box" preview={false} />
                     <div className="whiteTitle18 bold px-3">
@@ -232,23 +260,23 @@ const TransactionPreview = (props: any): any => {
                   <div className="d-flex my-3">
                     <Image src={WhiteUserFull} alt="box" preview={false} />
                     <div className="whiteTitle18 px-3">
-                      {sellerDetails?.name}
+                      {updatedSellerDetails?.name}
                     </div>
                   </div>
                   <div className="d-flex my-3">
                     <Image src={WhiteEmail} alt="box" preview={false} />
                     <div className="whiteTitle18 px-3">
-                      {sellerDetails?.email}
+                      {updatedSellerDetails?.email}
                     </div>
                   </div>
                   <div className="d-flex my-3">
                     <Image src={Globe} alt="box" preview={false} />
                     <div className="whiteTitle18 ps-3 noWrap overflowText">
                       <Tooltip
-                        title={sellerDetails?.countryAlias && sellerDetails?.countryAlias.length * 7 > 136 ? sellerDetails?.countryAlias : null}
+                        title={updatedSellerDetails?.countryAlias && updatedSellerDetails?.countryAlias.length * 7 > 136 ? updatedSellerDetails?.countryAlias : null}
                         overlayClassName='custom-tooltip'
                       >
-                        {sellerDetails?.countryAlias}
+                        {updatedSellerDetails?.countryAlias}
                       </Tooltip>
                     </div>
                     <Tooltip
@@ -260,18 +288,19 @@ const TransactionPreview = (props: any): any => {
                       </span>
                     </Tooltip>
                   </div>
+                  {(updatedSellerDetails?.nationalityName || updatedSellerDetails?.kycNationality) &&
                   <div className="d-flex my-3">
                     <Image src={Flag} alt="box" preview={false} />                           
                     <div className="whiteTitle18 ps-3 noWrap overflowText">
                       <Tooltip
                         title={
-                          (sellerDetails?.kycNationality?.length || sellerDetails?.nationalityName?.length) * 7 > 136
-                            ? (sellerDetails?.kycNationality || sellerDetails?.nationalityName)
+                          (updatedSellerDetails?.kycNationality?.length || updatedSellerDetails?.nationalityName?.length) * 7 > 136
+                            ? (updatedSellerDetails?.kycNationality || updatedSellerDetails?.nationalityName)
                             : null
                         }
                         overlayClassName='custom-tooltip'
                       >
-                        {sellerDetails?.kycNationality || sellerDetails?.nationalityName}
+                        {updatedSellerDetails?.kycNationality || updatedSellerDetails?.nationalityName}
                       </Tooltip>
                     </div>
                     <Tooltip
@@ -283,6 +312,7 @@ const TransactionPreview = (props: any): any => {
                       </span>
                     </Tooltip>
                   </div>
+                  }
                   <div className="d-flex my-3">
                     <Image src={Payment} alt="box" preview={false} />
                     <div className="whiteTitle18 bold px-3">
@@ -330,6 +360,118 @@ const TransactionPreview = (props: any): any => {
               </>
             </Row>
           </div>
+
+           {Array.isArray(buyers) && buyers.length > 0 && (
+                          <div className="mt-4">
+                            <div className="bg-admin-card seller-bg-admin-card">
+                              <Row className="gap-3 endtoend four-buyer-block form-body">
+                                {buyers?.filter((b) => !b.isMain)?.map((buyer, index) => (
+                                  <Col
+                                    key={index}
+                                    // span={contractStatus === "2" ? 7 : 24}
+                                  >
+                                    <div className="d-flex">
+                                      <div className="bluecard-smallbox">
+                                        <img src={WhiteUserFull} alt="box" />
+                                        <p className="mt-2 mb-0">
+                                          {
+                                            contractDetail?.contractStartedBy === "BUYER" ?  "Co-Buyer" : "Co-Seller"
+                                          }
+                                           </p>
+                                      </div>
+                                      <div className="flex-fill mx-md-3">
+                                        <div className="whiteTitle18 px-3 fs-5 text-break">
+                                          {buyer?.name || "--"}
+                                          {/* Jhone Doe */}
+                                        </div>
+                                        <div className="d-flex mx-3 my-2 gap-2">
+                                          <Image src={WhiteEmail} alt="email" preview={false} />
+                                          <span className="whiteTitle18 px-1 text-break text-wrap">
+                                            {buyer?.email || "--"}
+                                            {/* jhon@yopmail.com */}
+                                          </span>
+                                        </div>
+                                        
+                                        <div className="d-flex mx-3 my-2 gap-2">
+                                          <Image src={Globe} alt="globe" preview={false} />
+                                          <span className="whiteTitle18 px-1 text-break text-wrap">
+                                            {buyer?.country || "--"}
+                                            {/* United Arab Emirates */}
+                                            <Tooltip
+                                          title={"Residance Country"}
+                                          overlayClassName="custom-tooltip signupTooltip"
+                                        >
+                                          <span className="nationality_info">
+                                            <InfoCircleOutlined />
+                                          </span>
+                                        </Tooltip>
+                                          </span>
+
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </Col>
+                                ))}
+                              </Row>
+                            </div>
+                          </div>
+                        )}
+                        {/* seller details */}
+                      {Array.isArray(buyersOpposite) && buyersOpposite.length > 0 && (
+                      <div className="mt-4">
+                        <div className="bg-admin-card seller-bg-admin-card">
+                          <Row className="gap-3 endtoend four-buyer-block form-body">
+                            {buyersOpposite?.filter((s) => !s.isMain)?.map((seller, index) => (
+                              <Col 
+                              key={index} 
+                              // span={contractStatus === "2" ? 7 : 24}
+                              >
+                                <div className="d-flex">
+                                  <div className="bluecard-smallbox">
+                                    <img src={WhiteUserFull} alt="box" />
+                                    <p className="mt-2 mb-0">
+                                      {
+                                        contractDetail?.contractStartedBy === "BUYER" ?  "Co-Seller" : "Co-Buyer"
+                                      }
+                                      
+                                      </p>
+                                  </div>
+                                  <div className="flex-fill mx-md-3">
+                                    <div className="whiteTitle18 px-3 fs-5 text-break">
+                                      {seller?.name || "--"}
+                                      {/* Hammad Salem Naser */}
+                                      </div>
+                                    <div className="d-flex mx-3 my-2 gap-2">
+                                      <Image src={WhiteEmail} alt="box" preview={false} />
+                                      <span className="whiteTitle18 px-1 text-break text-wrap">
+                                        {seller?.email || "--"}
+                                        {/* yathin@yopmail.com */}
+                                        </span>
+                                    </div>
+                                    <div className="d-flex mx-3 my-2 gap-2">
+                                      <Image src={Globe} alt="icon" preview={false} />
+                                      <span className="whiteTitle18 px-1 text-break text-wrap">
+                                        {seller?.country || "--"}
+                                        {/* United Arab Emirates */}
+                                        <Tooltip
+                                  title={"Residance Country"}
+                                  overlayClassName="custom-tooltip signupTooltip"
+                                >
+                                  <span className="nationality_info">
+                                    <InfoCircleOutlined />
+                                  </span>
+                                </Tooltip>
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </Col>
+                            ))}
+                          </Row>
+                        </div>
+                        </div>
+                      )}
+
           <div className="mt-4">
             <Card className="px-4">
               <div className="stepDetails mb-4 mt-3">Category details</div>

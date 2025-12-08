@@ -52,6 +52,12 @@ const EditTransaction = ():any => {
   const [formValues, setFormValues] = useState<any>({
     userType: USER_TYPE_TEXT.BUYER,
   });
+  const [buyerCount, setBuyerCount] = useState(null);
+  const [buyerCountOpposite, setBuyerCountOpposite] = useState(null);
+  const [enableMultiBuyer, setEnableMultiBuyer] = useState(false);
+  const [enableMultiBuyerOpposite, setEnableMultiBuyerOpposite] = useState(false);
+  const [buyers, setBuyers] = useState<any>([]);
+  const [buyersOpposite, setBuyersOpposite] = useState<any>([]);
   const [buttonStatus, setButtonStatus] = useState<any>();
   const [isMatchAmount, setIsMatchAmount] = useState<any>();
   const [showPreviewModal, setShowPreviewModal] = useState(false);
@@ -64,7 +70,7 @@ const EditTransaction = ():any => {
   const [platformCharge, setPlatformCharge] = useState(0);
   const [leftAmount, setLeftAmount] = useState(0);
   const [countryPhone, setCountryPhone] = useState(0);
-  const [countryList, setCountryList] = useState<any[]>([]);
+  // const [countryList, setCountryList] = useState<any[]>([]);
   const [amountDiffrence, setAmountDiffrence] = useState("");
   const [addedDoc, setAddedDoc] = useState(false);
   const [userCountry, setUserCountry] = useState("");
@@ -213,6 +219,87 @@ const EditTransaction = ():any => {
     // assignItemCategory();
       getContractDetails(contractId, userAlias, isDraftedContract == "true" ? "draft" : "")
       .then((response) => {
+
+        
+        
+        
+        const buyerList = response.data?.buyerList || [];
+        const sellerList = response.data?.sellerList || [];
+
+        const formatedData = (list: any[], role: "BUYER" | "SELLER") => {
+          const map = new Map<string | number, any>();
+          list.forEach((entry: any, idx: number) => {
+            const userDet = entry.userDetail || {};
+            const email = userDet.email || entry.email || "";
+            const alias = entry.userAlias || userDet.userAlias || entry.aliasName;
+            const key = email || alias || idx; 
+
+            const obj = {
+              id: entry?.id || userDet?.id || idx + 1,
+              userAlias: alias,
+              type: role,
+              email: email,
+              name: userDet?.name || entry?.name || "",
+              contact: userDet?.contactNumber || entry?.contactNumber || entry?.contact || "",
+              country: userDet?.countryAlias || entry?.countryAlias || "AE",
+              callingCode: userDet?.callingCode || entry?.callingCode || "+971",
+              isMain: (userDet && (userDet.isMainUser === true)) || entry.isMainUser || false,
+            };
+
+            if (!map.has(key)) {
+              map.set(key, obj);
+            } else {
+              const existing = map.get(key);
+              if ((obj.isMain && !existing.isMainUser) || (!existing.userAlias && obj.userAlias)) {
+                map.set(key, { ...existing, ...obj });
+              }
+            }
+          });
+          return Array.from(map.values());
+        };
+
+        const formattedBuyers = formatedData(buyerList, "BUYER");
+        const formattedSellers = formatedData(sellerList, "SELLER");
+
+        
+        
+        if(response?.data?.contractStartedBy === USER_TYPE_TEXT.BUYER){
+          setBuyers(formattedBuyers);
+          setBuyersOpposite(formattedSellers);
+          
+          const hasMultipleBuyers = formattedBuyers.length > 1;
+          const hasMultipleSellers = formattedSellers.length > 1;
+
+          setEnableMultiBuyer(hasMultipleBuyers);
+          setEnableMultiBuyerOpposite(hasMultipleSellers);
+
+          if (hasMultipleBuyers) {
+            form.setFieldsValue({ multipartyOption: "YES" });
+          }
+          if (hasMultipleSellers) {
+              form.setFieldsValue({ multipartyOptionOpposite: "YES" });
+          }
+          setBuyerCount(formattedBuyers?.length as any);
+          setBuyerCountOpposite(formattedSellers?.length as any);
+        }else{
+          setBuyers(formattedSellers);
+          setBuyersOpposite(formattedBuyers);
+          
+          const hasMultipleBuyers = formattedSellers.length > 1;
+          const hasMultipleSellers = formattedBuyers.length > 1;
+
+          setEnableMultiBuyer(hasMultipleBuyers);
+          setEnableMultiBuyerOpposite(hasMultipleSellers);
+          if (hasMultipleBuyers) {
+            form.setFieldsValue({ multipartyOptionOpposite: "YES" });
+          }
+          if (hasMultipleSellers) {
+            form.setFieldsValue({ multipartyOption: "YES" });
+          }
+          setBuyerCount(formattedSellers?.length as any);
+          setBuyerCountOpposite(formattedBuyers?.length as any);
+        }
+
         setPageLoading(false)
         setAdvisorDetails(response.data?.escrowAdvisorDetails)
         setEditContractDetails(response.data);
@@ -257,20 +344,12 @@ const EditTransaction = ():any => {
         setPageLoading(false)
         console.log("Error!", error);
       });
-   
-   
-
-      // document.addEventListener("wheel", function (event: object) {
-    //   if (document.activeElement.type === "number") {
-    //     document.activeElement.blur();
-    //   }
-    // });
   }, []);
 
   useEffect(() => {
      getAllCountries()
           .then((response: any) => {
-            setCountryList(response?.data || []);
+            // setCountryList(response?.data || []);
             getUserData(UserAlias?.email)
               .then((res: any) => {
                 const countryName = response?.data.filter(
@@ -284,7 +363,7 @@ const EditTransaction = ():any => {
                 setPartyCountry(partyCnt);
               })
           })
-  });
+  }, []);
 
   useEffect(() => {
     getlocalBankDetails(userAlias)
@@ -393,13 +472,45 @@ const EditTransaction = ():any => {
     }
   };
   const onFinish = (values: any) => {
-    if(buttonText === 'Preview'){
+
+    // Validate buyers and buyersOpposite: ensure emails are present, valid and unique across both arrays
+    
+    const participants = [...(buyers || []), ...(buyersOpposite || [])].filter(Boolean);
+    
+    
+    if (participants.length) {
+      // simple email regex
+      const emailRegex = /^\S+@\S+\.\S+$/;
+      // check for missing/invalid emails
+      const invalid = participants.find(
+        (p: any) => !p?.email || !emailRegex.test((p.email || "").trim())
+      );
+      if (invalid) {
+        setLoading(false);
+        message.error("Please provide a valid email for all participants.");
+        return;
+      }
+      // check uniqueness (case-insensitive)
+      const emails = participants.map((p: any) => (p.email || "").trim().toLowerCase());
+      const duplicate = emails.find((e: string, i: number) => emails.indexOf(e) !== i);
+      if (duplicate) {
+        setLoading(false);
+        message.error(`Duplicate email detected: ${duplicate}`);
+        return;
+      }
+    }
+    
+    if (buttonText === "Preview") {
       gotoPreview();
-      return false
+      return false;
     } else {
-      const contractStartedBy=editPaymentDetails?.contractStartedBy;
+      const contractStartedBy = editPaymentDetails?.contractStartedBy;
       const isDrafted = isDraftedContract == "true";
-      if ((contractStartedBy === "ESCROW_ADVISOR" && docusignDone === null) || (!isDrafted && contractStartedBy !== "ESCROW_ADVISOR" && docusignDone !== null) || (isDrafted && contractStartedBy !== "ESCROW_ADVISOR")) {
+      if (
+        (contractStartedBy === "ESCROW_ADVISOR" && docusignDone === null) ||
+        (!isDrafted && contractStartedBy !== "ESCROW_ADVISOR" && docusignDone !== null) ||
+        (isDrafted && contractStartedBy !== "ESCROW_ADVISOR")
+      ) {
         if (editPaymentDetails.fromEnvelope) {
           changeStatusHandler();
           // return;
@@ -409,10 +520,10 @@ const EditTransaction = ():any => {
         setLoading(true);
         const dynamicInputFields: any = [];
         const milestoneList: any = [];
-        const customFieldList:any = {};
+        const customFieldList: any = {};
 
         for (const key in customField) {
-          const keyVal:any = key
+          const keyVal: any = key;
           const Key = `cp${key}`;
           customFieldList[Key] = Object.values(customField)[keyVal];
         }
@@ -433,20 +544,18 @@ const EditTransaction = ():any => {
         //   }
         // }
 
-        if(!isDrafted && values.isMilestone === false && Object.values(RequriedDoc).length <= 0) {
-          setLoading(false)
+        if (!isDrafted && values.isMilestone === false && Object.values(RequriedDoc).length <= 0) {
+          setLoading(false);
           setRequiredDocError({
             message: "Documents required",
-            status: true
+            status: true,
           });
           return;
         }
         for (const key in values) {
           if (key.split("_")[0] === "milestone") {
             values[`milestone_` + key.split("_")[1]].releaseDate =
-              values[`milestone_` + key.split("_")[1]].releaseDate.format(
-                "YYYY-MM-DD"
-              );
+              values[`milestone_` + key.split("_")[1]].releaseDate.format("YYYY-MM-DD");
             milestoneList.push(values[key]);
             delete values[key];
           }
@@ -504,8 +613,35 @@ const EditTransaction = ():any => {
             });
           })
         }
-        const requestBody = {
+
+        // Build maps of existing buyer/seller userAlias (or ids) from editContractDetails
+        const existingBuyerMap: any = {};
+        const existingSellerMap: any = {};
+        if (editContractDetails?.buyerList?.length) {
+          editContractDetails.buyerList.forEach((b: any) => {
+            const email = b?.userDetail?.email || b?.email;
+            if (email) {
+              existingBuyerMap[email] = b?.userAlias || b?.userDetail?.userAlias || b?.userAlias;
+              existingBuyerMap[`${email}_id`] = b?.id || b?.userDetail?.id || b?.userId;
+            }
+          });
+        }
+        if (editContractDetails?.sellerList?.length) {
+          editContractDetails.sellerList.forEach((s: any) => {
+            const email = s?.userDetail?.email || s?.email;
+            if (email) {
+              existingSellerMap[email] = s?.userAlias || s?.userDetail?.userAlias || s?.userAlias;
+              existingSellerMap[`${email}_id`] = s?.id || s?.userDetail?.id || s?.userId;
+            }
+          });
+        }
+
+        const requestBody:any = {
+          ...editContractDetails,
           ...values,
+          
+
+          
           userEntityType: entityType,
           userAlias: userAlias,
           clientAlias: "TRUST",
@@ -529,6 +665,88 @@ const EditTransaction = ():any => {
         if(values?.contractStartedBy === USER_TYPE_TEXT.BUYER) {
           requestBody.sourceOfFunds = sourceOfFundIds
         }
+
+        if(values.contractStartedBy === "BUYER"){ 
+          if(buyers.length){
+            requestBody.buyerList = buyers.map((item: any) => {
+              const mappedUserAlias = item.userAlias || existingBuyerMap[item.email];
+              const mappedId = item.id || existingBuyerMap[`${item.email}_id`];
+              const buyerObj: any = {
+                email: item.email,
+                name: item.name,
+                contactNumber: item.contact,
+                countryAlias: item.country,
+                countrycode: item.callingCode,
+                role: "BUYER",
+                userType: "USER",
+                isMainUser: item.isMainUser ?? item.isMain,
+              };
+              if (mappedUserAlias) buyerObj.userAlias = mappedUserAlias;
+              if (mappedId) buyerObj.id = mappedId;
+              return buyerObj;
+            })
+          }
+          if(buyersOpposite.length){
+            requestBody.sellerList = buyersOpposite.map((item: any) => {
+              const mappedUserAlias = item.userAlias || existingSellerMap[item.email];
+              const mappedId = item.id || existingSellerMap[`${item.email}_id`];
+              const sellerObj: any = {
+                email: item.email,
+                name: item.name,
+                contactNumber: item.contact,
+                countryAlias: item.country,
+                countrycode: item.callingCode,
+                role: "SELLER",
+                userType: "USER",
+                isMainUser: item.isMainUser ?? item.isMain,
+              };
+              if (mappedUserAlias) sellerObj.userAlias = mappedUserAlias;
+              if (mappedId) sellerObj.id = mappedId;
+              return sellerObj;
+            })
+        }
+
+        }else{
+          if(buyers.length){
+          requestBody.sellerList = buyers.map((item: any) => {
+            const mappedUserAlias = item.userAlias || existingBuyerMap[item.email];
+            const mappedId = item.id || existingBuyerMap[`${item.email}_id`];
+            const buyerObj: any = {
+              email: item.email,
+              name: item.name,
+              contactNumber: item.contact,
+              countryAlias: item.country,
+              countrycode: item.callingCode,
+              role: "SELLER",
+              userType: "USER",
+              isMainUser: item.isMainUser ?? item.isMain,
+            };
+            if (mappedUserAlias) buyerObj.userAlias = mappedUserAlias;
+            if (mappedId) buyerObj.id = mappedId;
+            return buyerObj;
+          })
+        }
+        if(buyersOpposite.length){
+            requestBody.buyerList = buyersOpposite.map((item: any) => {
+              const mappedUserAlias = item.userAlias || existingSellerMap[item.email];
+              const mappedId = item.id || existingSellerMap[`${item.email}_id`];
+              const sellerObj: any = {
+                email: item.email,
+                name: item.name,
+                contactNumber: item.contact,
+                countryAlias: item.country,
+                countrycode: item.callingCode,
+                role: "BUYER",
+                userType: "USER",
+                isMainUser: item.isMainUser ?? item.isMain,
+              };
+              if (mappedUserAlias) sellerObj.userAlias = mappedUserAlias;
+              if (mappedId) sellerObj.id = mappedId;
+              return sellerObj;
+            })
+          }
+        } 
+
         // assignItemCategory();
 
         // setContractStartedBy(requestBody.contractStartedBy);
@@ -571,15 +789,15 @@ const EditTransaction = ():any => {
     }
   };
 
-  const getNationalityInfo = (countryValue: string) => {
-    const found = countryList?.find(
-      (c: any) => c.isoCode === countryValue || c.name === countryValue
-    );
-    return {
-      kycNationality: countryValue || "United Arab Emirates",
-      nationalityName: found?.name || countryValue || "United Arab Emirates",
-    };
-  };
+  // const getNationalityInfo = (countryValue: string) => {
+  //   const found = countryList?.find(
+  //     (c: any) => c.isoCode === countryValue || c.name === countryValue
+  //   );
+  //   return {
+  //     kycNationality: countryValue || "United Arab Emirates",
+  //     nationalityName: found?.name || countryValue || "United Arab Emirates",
+  //   };
+  // };
   const gotoPreview = async () => {
     try {
       if (sellerCountryError && sellerCountryError?.status !== true) {
@@ -656,16 +874,31 @@ const EditTransaction = ():any => {
         }
         // setContractStartedBy(requestBody.contractStartedBy);
         if (requestBody?.contractStartedBy != "ESCROW_ADVISOR") {
-          const sellerCountry =
-            requestBody?.contractStartedBy === "BUYER"
-              ? requestBody?.sellerCountry
-              : requestBody?.buyerCountry;
+          // const sellerCountry =
+          //   requestBody?.contractStartedBy === "BUYER"
+          //     ? requestBody?.sellerCountry
+          //     : requestBody?.buyerCountry;
+
+          const currentBuyerDetails = editContractDetails?.buyerDetails || {};
+          const buyerCountry = requestBody?.contractStartedBy === 'BUYER' ? requestBody?.buyerCountry : requestBody?.sellerCountry;
+
+          setBuyerDetails({
+            name: requestBody?.contractStartedBy === 'BUYER' ? requestBody?.buyerContactName : requestBody?.sellerContactName,
+            email: requestBody?.contractStartedBy === 'BUYER' ? requestBody?.buyerContactEmail : requestBody?.sellerContactEmail,
+            countryAlias: buyerCountry,
+            kycNationality: currentBuyerDetails.kycNationality || currentBuyerDetails.nationalityName,
+            nationalityName: currentBuyerDetails.nationalityName || currentBuyerDetails.kycNationality 
+          });
+
+          const currentSellerDetails = editContractDetails?.sellerDetails || {};
+          const sellerCountry = requestBody?.contractStartedBy === 'BUYER' ? requestBody?.sellerCountry : requestBody?.buyerCountry;
 
           setSellerDetails({
-            name: requestBody?.contractStartedBy == 'BUYER' ? requestBody?.sellerContactName : requestBody?.buyerContactName,
-            email: requestBody?.contractStartedBy == 'BUYER' ? requestBody?.sellerContactEmail : requestBody?.buyerContactEmail,
+            name: requestBody?.contractStartedBy === 'BUYER' ? requestBody?.sellerContactName : requestBody?.buyerContactName,
+            email: requestBody?.contractStartedBy === 'BUYER' ? requestBody?.sellerContactEmail : requestBody?.buyerContactEmail,
             countryAlias: sellerCountry,
-            ...getNationalityInfo(sellerCountry)
+            kycNationality: currentSellerDetails.kycNationality || currentSellerDetails.nationalityName,
+            nationalityName: currentSellerDetails.nationalityName || currentSellerDetails.kycNationality 
           });
           if (userAlias === editContractDetails?.sellerDetails?.userAlias) {
             setBuyerDetails(editContractDetails?.sellerDetails);
@@ -758,6 +991,18 @@ const EditTransaction = ():any => {
                           formValues={formValues}
                           setFormValues={setFormValues}
                           form={form}
+                          buyers={buyers}
+                          setBuyers={setBuyers}
+                          buyersOpposite={buyersOpposite}
+                          setBuyersOpposite={setBuyersOpposite}
+                          buyerCount={buyerCount}
+                          setBuyerCount={setBuyerCount}
+                          buyerCountOpposite={buyerCountOpposite}
+                          setBuyerCountOpposite={setBuyerCountOpposite}
+                          enableMultiBuyer={enableMultiBuyer}
+                          setEnableMultiBuyer={setEnableMultiBuyer}
+                          enableMultiBuyerOpposite={enableMultiBuyerOpposite}
+                          setEnableMultiBuyerOpposite={setEnableMultiBuyerOpposite}
                           setCurrencySymbol={setCurrencySymbol}
                           userExists={userExists}
                           setUserExists={setUserExists}
@@ -795,6 +1040,7 @@ const EditTransaction = ():any => {
                           payoutAccount={payoutAccount}
                           setPayoutAccount={setPayoutAccount}
                           bankAccountList={bankAccountList}
+                          editContractDetails={editContractDetails}
                         />
                         <PaymentDetails
                           formValues={formValues}
@@ -1023,6 +1269,8 @@ const EditTransaction = ():any => {
           escrowAdvisorDetails={advisorDetails} 
           contractDetail={previewValue} 
           taxDetails={taxDetails} 
+          buyers={buyers} 
+          buyersOpposite={buyersOpposite}
           buyerDetails={buyerDetails} 
           sellerDetails={sellerDetails} 
           categoryName={categoryName} 
