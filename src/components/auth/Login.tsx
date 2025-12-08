@@ -13,7 +13,7 @@ import Alerts from "../utilities/Alert";
 import { InputText } from "../ui-elements/InputsRepo";
 import LeftSideStructure from "../auth/leftStructure/LeftSideStructure";
 import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
-import FormLogo from "../../assets/img/formLogo.svg";
+import FormLogo from "../../assets/img/bld-logo.jpg";
 import { loginUser} from "../../services/user";
 import { emailRegex,setLocalStorage } from "../Common/Constants";
 import { Forgot, OtpVerification, SignUp, Signuplanding,  VerifyEmail } from "../Common/RouteConst";
@@ -117,7 +117,7 @@ const Login = ():any => {
           <LeftSideStructure width={Width} />
           </div>
           <div className="card bg-white logincard">
-            <Image src={FormLogo} height={90} width={77} preview={false} style={{ marginLeft: "-14px" }}/>
+            <Image src={FormLogo} height={90} width={95} preview={false} style={{ marginLeft: "-14px", objectFit:'contain' }}/>
             <div className="formText responsive">Welcome!</div>
             <div className="formSubText mt-2 mb-3">
               Please enter your credentials to proceed

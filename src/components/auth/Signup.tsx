@@ -1,5 +1,7 @@
 import "../auth/auth.scss";
 import Email from "../../assets/img/Email_outline.svg";
+import ProjectId from "../../assets/img/id.svg"
+import TransactionType from "../../assets/img/transactionType.svg"
 import lock from "../../assets/img/lock.svg";
 import { SmallText } from "../ui-elements/TextRepo";
 import { Checkbox, Col, Form, Image, Input, Row, Select, Tooltip, message } from "antd";
@@ -505,36 +507,6 @@ const Signup = ():any => {
                       </span>
                     </Tooltip>
                 </InputText>}
-
-
-                  <InputText
-                  fieldname="projectId"
-                  className="inputField mb-4 w-100 signup-res-inputfield"
-                  rules={[
-                    {
-                      required: true,
-                      message: "ProjectID is required!",
-                    }
-                  ]}
-                >
-                  <Input placeholder="Project Id"   disabled={!!userData.projectId}/>
-                </InputText>
-
-
-                   <InputText
-                  fieldname="transactionType"
-                  className="inputField mb-4 w-100 signup-res-inputfield"
-                  rules={[
-                    {
-                      required: true,
-                      message: "Transaction Type is required!",
-                    }
-                  ]}
-                >
-                  <Input placeholder="Transaction Type"   disabled={!!userData.transactionType}/>
-                </InputText>
-
-
                 <Form.Item
                   name="contactNumber"
                   className="inputField w-100 signup-res-inputfield"
@@ -561,6 +533,42 @@ const Signup = ():any => {
 
                   />
                 </Form.Item>
+                  <InputText
+                  fieldname="projectId"
+                  className="inputField mb-4 w-100 signup-res-inputfield"
+                   rules={[
+                    {
+                      required: true,
+                      message: "ProjectID is required!",
+                    }
+                  ]}
+                >
+                  <Input
+                    prefix={
+                      <Image src={ProjectId} preview={false} className="pe-3" />
+                    }
+                    placeholder="Project Id"   disabled={!!userData.projectId}
+                  />
+                </InputText>
+
+
+                <InputText
+                  fieldname="transactionType"
+                  className="inputField mb-4 w-100 signup-res-inputfield"
+                  rules={[
+                    {
+                      required: true,
+                      message: "Transaction Type is required!",
+                    }
+                  ]}
+                >
+                  <Input
+                    prefix={
+                      <Image src={TransactionType} preview={false} className="pe-3" style={{width:'32px'}}/>
+                    }
+                   placeholder="Transaction Type"   disabled={!!userData.transactionType}
+                  />
+                </InputText>
 
                 {/* <Form.Item className="country-number mb-4 ">
                   <Input.Group compact>

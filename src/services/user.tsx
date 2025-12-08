@@ -753,8 +753,12 @@ export const updateContractPayoutAccount = async (body: {
 
 
 
+// export const inviteUser = async (requestBody: any): Promise<any> => {
+//   return await instance.post(uri.inviteuser, requestBody);
+// };
 
-export const inviteUser = async (requestBody: any): Promise<any> => {
-  return await instance.post(uri.inviteuser, requestBody);
+export const inviteUser = async (requestBody: any, onUploadProgress?: any): Promise<any> => {
+  return await instance.post(uri.inviteuser, requestBody, {
+    onUploadProgress,
+  });
 };
-

@@ -2247,3 +2247,20 @@
     max-width: 100px;
 }
 }
+@media (max-width: 480px) {
+  .file-info-wrapper {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 20px;
+  }
+
+  .csv-static-preview .delete-icon {
+    align-self: center;
+  }
+
+  .file-name {
+    font-size: 13px;
+    white-space: normal;
+    word-break: break-word;
+  }
+}

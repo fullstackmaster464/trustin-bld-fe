@@ -15,10 +15,13 @@ import {
   Row,
   Form,
   Col,
-  Upload
+  Upload,
+  Dropdown,
+  Progress
 } from "antd";
 import { useNavigate } from "react-router-dom";
 import Management from "../../assets/img/Headers/User_management.svg";
+import AddBtn from "../../assets/img/addbtn.svg"
 import View from "../../assets/img/view.svg";
 import Download from "../../assets/img/download.svg";
 import Download_Blue from "../../assets/img/download_blue.svg";
@@ -27,6 +30,7 @@ import { useEffect, useState } from "react";
 import Search from "../../assets/img/search.svg";
 import emptyCard from "../../assets/img/emptyCard.svg";
 import Trio from "../../assets/img/trio.svg";
+import CsvFile from "../../assets/img/csvfile.svg"
 import { UserInfo } from "../Common/RouteConst";
 import {
   downloadDetails,
@@ -68,7 +72,8 @@ import UserFull from "../../assets/img/User_Full.svg";
 import SuccessIcon from "../../assets/img/Successpopupicon.svg";
 import Country from "../../assets/img/Country.svg";
 import modalcloseicon from "../../assets/img/modalclose.svg"
-import { UploadOutlined } from "@ant-design/icons";
+import UploadCsv from "../../assets/img/upload_csv.svg"
+import { DeleteOutlined,  DownOutlined, UploadOutlined } from "@ant-design/icons";
 
 const UserManagement = ():any => {
   const REACT_APP_SERVER_URL = process.env.REACT_APP_SERVER_URL;
@@ -115,6 +120,8 @@ const UserManagement = ():any => {
   const [modalVisible, setModalVisible] = useState(false);
   const [unblockModal, setUnblockModal] = useState(false);
   const UserType = JSON.parse(getLocalStorage("auth")!)?.userType;
+  const [uploadProgress, setUploadProgress] = useState<number>(0);
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
 
   useEffect(() => {
     fetchAllUsers(current, page, "all");
@@ -424,6 +431,14 @@ const UserManagement = ():any => {
         }
       });
   }
+
+  const handleDownloadSampleFile = () => {
+    const link = document.createElement("a");
+    link.href = "/import-user-sample.xlsx"; 
+    link.download = "import-user-sample.xlsx";
+    link.click();
+  };
+
   const itemRender:any = (_: any, type: string, originalElement: HTMLElement) => {
     if (type === "prev") {
       return <a className="prev_nxt mx-4">Prev</a>;
@@ -781,19 +796,30 @@ const UserManagement = ():any => {
     }
   };
 
- const onFinishUpload = async (values: any) => {
+  const onFinishUpload = async (values: any) => {
+    if (!uploadedFile) {
+    message.warning("Please select an Excel file before submitting!");
+    return;
+  }
   try {
     setBtnLoader(true);
+    setUploadProgress(0);
     const formData = new FormData();
     formData.append("file", values.file);
 
-    const res = await inviteUser(formData);
-    
-    setIsUploadModalVisible(false);
-    if(res?.data?.errors && res?.data?.errors?.length){
+    const res = await inviteUser(formData, (progressEvent: any) => {
+      if (progressEvent.total) {
+        const percent = Math.round((progressEvent.loaded / progressEvent.total) * 100);
+        setUploadProgress(percent);
+      }
+    });
+    if(res?.data?.errors && res?.data?.errors?.length) {
       message.error(res?.data?.message);
       return;
     }
+    setIsUploadModalVisible(false);
+    setUploadedFile(null);
+    form.resetFields();
     fetchUsersList(current, page, "all", {});
     message.success("Imported successfully!");
   } catch (e) {
@@ -801,11 +827,35 @@ const UserManagement = ():any => {
     message.error("Upload failed!");
   } finally {
     setBtnLoader(false);
+    // setTimeout(() => {
+    //   setUploadProgress(0);
+    // }, 500);
   }
- };
+};
+
+
+const formatFileSize = (bytes: number): string => {
+    if (bytes === 0) return "0 Bytes";
+    const k = 1024;
+    const sizes = ["Bytes", "KB", "MB", "GB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
+  };
 
 
 
+  const items = [
+    {
+      key: "manual",
+      label: "Add Manually",
+      onClick: () => setIsAddModalVisible(true),
+    },
+    {
+      key: "upload",
+      label: "Invite User",
+      onClick: () => setIsUploadModalVisible(true),
+    },
+  ];
 
 
   return (
@@ -886,26 +936,19 @@ const UserManagement = ():any => {
                       ""
                     )}
                   </div>
-                  <div className="d-flex">
+                  <div
+                   className={Width > 450 ? "d-flex" : "d-flex flex-wrap gap-2"}
+                  >
                     {UserType !== "SUPPORT_ENGINEER"  &&
                   <>
-                    <Button
-                      className="add-itemtype mx-3"
-                      onClick={() => {
-                        setIsAddModalVisible(true);
-                      }}
-                    >
-                      + Add New User
-                    </Button>
-                    <Button
-                      className="add-itemtype mx-3"
-                      onClick={() => {
-                        setIsUploadModalVisible(true);
-                      }}
-                    >
-                      + Upload
-                    </Button>
-                   </> 
+                      <Dropdown menu={{ items }} trigger={["click"]} placement="bottomRight">
+                         <Button className="add-new-user">
+                            <Image src={AddBtn} alt="addBtn" className="add-btn"   preview={false}/>
+                          <span> Add New User</span>
+                          <DownOutlined className="ms-2 pe-2" />
+                        </Button>
+                      </Dropdown>
+                      </>
                     }
                     <Button
                       className="downloadBtn mx-3"
@@ -1368,73 +1411,125 @@ const UserManagement = ():any => {
 
 
           <Modal title={
-                    <div className="d-flex justify-content-between align-items-center">
-                      <p className="large-title mb-0">Upload user</p>
-                      <img
-                        src={modalcloseicon}
-                        alt="close-icon"
-                      className="cursor"
-                        onClick={() => setIsUploadModalVisible(false)}
+              <div className="d-flex justify-content-between align-items-center">
+                <p className="large-title mb-0">Upload user</p>
+                <img
+                  src={modalcloseicon}
+                  alt="close-icon"
+                  className="cursor"
+                  onClick={() => {
+                    setIsUploadModalVisible(false);
+                    setUploadedFile(null);            
+                  }}
+                />
+              </div>
+            }
+            className="add-item-category-modal upload-user-modal"
+            open={isUploadModalVisible}
+            footer={null}
+            closable={false}
+            onCancel={() => {
+              setIsUploadModalVisible(false);
+              setUploadedFile(null);
+            }}
+          >
+            <div className="modal-body-wrapper">
+              <hr className="break-line" />
+              <Form form={form} onFinish={onFinishUpload} className="center-form">
+                <div className="upload-instructions text-center mb-3">
+                  <Image src={UploadCsv} alt="upload_csv" preview={false} className="mb-3" />
+                  <p className="upload-preview-text mb-1">Choose a file or drag & drop it here.</p>
+                  <p className="upload-preview-text-inner mb-1">Excel formats up to 50MB</p>
+                  <span onClick={handleDownloadSampleFile} className="download-sample-link d-flex justify-content-center align-items-center cursor-pointer mb-3">
+                    Download Sample Excel File
+                  </span>
+                    <Form.Item
+                    name="file" 
+                  // rules={[{ required: true, message: "CSV file is required!" }]}
+                  className="text-center upload-form-item d-flex justify-content-center align-items-center bg-white"
+                  style={{background:'#fff'}}
+                >
+                  <Upload
+                   beforeUpload={() => false} // prevents auto upload
+                    // accept=".csv"
+                    accept=".xlsx,.xls,.csv"
+                    maxCount={1}
+                    onChange={(info) => {
+                      if (info.file) {
+                        setUploadedFile(info.file as any);
+                        form.setFieldsValue({ file: info.file });
+                      }
+                    }}
+                  >
+                    <Button icon={<UploadOutlined />} className="upload-csv-btn">
+                  Upload Excel File
+                    </Button>
+                  </Upload>
+                </Form.Item>
+                </div>
+               {uploadedFile && (
+              <div className="csv-preview-wrapper mb-4">
+                <div className="csv-static-preview">
+                  <div className="file-info-wrapper">
+                    <div className="left">
+                      <Image src={CsvFile} alt="csvfile" preview={false} />
+                      <div className="file-text">
+                        <span className="file-name">{uploadedFile.name}</span>
+                        <span className="file-size">{formatFileSize(uploadedFile.size)}</span>
+                      </div>
+                    </div>
+                    <DeleteOutlined
+                      className="delete-icon cursor-pointer"
+                      onClick={() => {
+                        setUploadedFile(null);
+                        form.setFieldsValue({ file: undefined });
+                        setUploadProgress(0);
+                      }}
+                    />
+                  </div>
+                  {uploadProgress > 0 && (
+                    <div className="progress-wrapper">
+                      <Progress
+                        percent={uploadProgress}
+                        strokeWidth={15}
+                        style={{position:'relative'}}
+                        strokeLinecap="butt"
                       />
                     </div>
-                  }
-                    className="add-item-category-modal d-flex center"
-                    open={isUploadModalVisible}
-                    footer={null}
-                    closable={false}
-                    onCancel={() => setIsUploadModalVisible(false)}
-                  >
-                    
-                    <hr className="break-line" />
-                    <Form onFinish={onFinishUpload} form={form}>
-                      <Row gutter={[16, 16]} align="middle">
-                      <Col xs={24} sm={24} md={12} lg={12} xl={12}>
-                      <Form.Item
-                        name="file"
-                        valuePropName="file"
-                        rules={[
-                          {
-                            required: true,
-                            message: "CSV file is required!",
-                          },
-                        ]}
-                      >
-                        <Upload
-                          beforeUpload={() => false} // prevents auto upload
-                          accept=".csv"
-                          maxCount={1}
-                          onChange={(info) => form.setFieldsValue({ file: info.file })}
-                        >
-                          <Button icon={<UploadOutlined />}>Upload CSV File</Button>
-                        </Upload>
-                      </Form.Item>
-                    </Col>
- 
-                  </Row>
-                  <Row gutter={{ xs:25, sm: 25, md: 25, lg: 25 }} >
-                    <Col span={24} className="my-4 w-100 d-flex align-items-center">
-                      <Button
-                        key="submit"
-                        type="primary"
-                        htmlType="submit"
-                        loading={btnLoader}
-                        className="modal-button w-auto "
-                      >
-                        Submit sheet
-                      </Button>
-                      <Button
-                        className="rounded_cancel_btn mx-3 mt-0"
-                        onClick={() => {
-                          form.resetFields(); 
-                        }}
-                      >
-                        Clear
-                      </Button>
-                    </Col>
-                  </Row>
-                </Form>    
-                </Modal>
-
+                  )}
+                </div>
+              </div>
+            )}
+                <hr className="break-line" />
+                <Row gutter={{ xs:25, sm: 25, md: 25, lg: 25 }} >
+                              <Col span={24}
+                              className={Width > 420 ? "w-100 d-flex align-items-center justify-content-between flex-wrap" : "w-100 d-flex align-items-center justify-content-between flex-wrap  flex-column gap-3"}>
+                               <Button
+                                  type="primary"
+                                  htmlType="submit"
+                                  loading={btnLoader}
+                                  // disabled={!uploadedFile}        
+                                  className="submit-sheet-button"
+                                >
+                                  Submit sheet
+                                </Button>
+                                <Button
+                                  className="rounded_cancel_btn mx-3 mt-0"
+                                  // onClick={() => {
+                                  //   form.resetFields(); 
+                                  // }}
+                                   onClick={() => {
+                                  form.resetFields();
+                                  setUploadedFile(null);
+                                }}
+                                >
+                                  Clear
+                                </Button>
+                              </Col>
+                            </Row>
+              </Form>
+            </div>
+          </Modal>
 
                 <Modal
                   open={modalVisible}

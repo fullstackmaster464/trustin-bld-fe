@@ -51,8 +51,8 @@ import onlinePayments from "../../assets/img/onlinepaygray.svg";
 import onlinePaymentsFill from "../../assets/img/onlinepayfill.svg";
 import supportlist from "../../assets/img/supportlistgray.svg"
 import supportListFill from "../../assets/img/supportlistfill.svg"
-import Logo from "../../assets/img/Logo.svg";
-import FormLogo from "../../assets/img/formLogo.svg";
+import Logo from "../../assets/img/bld-logo.jpg";
+import FormLogo from "../../assets/img/bld-logo.jpg";
 import Managercheque from "../../assets/img/bankcheck.svg";
 import Mangerchequegray from "../../assets/img/bankcheckfgray.svg";
 import { useState } from "react";
@@ -960,8 +960,8 @@ const Sidebar = (props: object | any): any => {
          </div>
       <div className="center" style={{background:'#fff'}}>
             {(collapsed)?
-             <Image src={FormLogo} height={35} width={35} preview={false} className="sidebarlogo" onClick={() => {navigate(Dashboard)}} style={{cursor:'pointer'}}/>:
-              <Image preview={false} src={Logo} className="sidebarlogo" onClick={() => {navigate(Dashboard)}} style={{cursor:'pointer'}}/>
+             <Image src={FormLogo} height={100} width={100} preview={false} className="sidebarlogo" onClick={() => {navigate(Dashboard)}} style={{cursor:'pointer', objectFit:'contain'}}/>:
+              <Image preview={false} height={100} width={100} src={Logo} className="sidebarlogo" onClick={() => {navigate(Dashboard)}} style={{cursor:'pointer',objectFit:'contain'}}/>
             }
             </div>
         <Menu

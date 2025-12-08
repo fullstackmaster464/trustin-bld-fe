@@ -3283,6 +3283,18 @@ textarea::placeholder {
   border-radius: 14px;
   height: 306px;
 }
+.submit-sheet-button{
+   background: $secondary-color !important;
+  border-radius: 33px;
+  width: 140px;
+  height: 46px;
+  border: none;
+  span {
+    font-size: 16px;
+    color: white;
+    font-weight: bold;
+  }
+}
 .modal-button {
   background: $secondary-color !important;
   border-radius: 33px;
@@ -7679,4 +7691,214 @@ text-align: center;
     overflow: hidden;
     text-overflow: ellipsis;
     max-width: 75px;
+}
+.add-new-user {
+  background-color: #003399 !important;  
+  color: #ffffff !important;       
+  border: none !important;
+  border-radius: 30px !important;    
+  padding: 6px 6px !important;      
+  display: flex;
+  align-items: center;
+  gap: 2px;                
+  font-size: 14px;
+  font-weight: 500;
+  height: 40px;                        
+  cursor: pointer;
+}
+.add-new-user:hover {
+  background-color: #002b80 !important;  
+  color: #ffffff !important;
+}
+.add-btn{
+  width: 35px !important;
+  height: 20px !important;
+  margin: 0;
+  padding: 0;
+  border-radius: 50%;
+}
+.user-upload-modal .ant-modal-content {
+  border-radius: 14px;
+  padding: 0px 0px 20px;
+}
+
+.large-title {
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+.ant-upload-drag {
+  border: 1.8px dashed #d0d4db !important;
+  background: #fafafa !important;
+  padding: 35px 0 !important;
+  border-radius: 12px !important;
+}
+
+.upload-csv-btn {
+  background-color: #fff1ed;
+  border: 1px solid #ffa284;
+  color: #26385d;
+  font-size: 14px;
+  border-radius: 15px;
+  transition: all 0.3s ease;
+}
+
+.upload-csv-btn span {
+  color: #26385d;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.upload-csv-btn:hover {
+  background-color: #fff1ed !important;  
+  border-color: #ff7a50 !important;    
+  color:#26385d !important;    
+}
+
+.upload-csv-btn:hover span {
+  color: #26385d !important;   
+}
+
+.upload-user-modal .ant-upload-list-item {
+  margin-top: 8px;
+}
+
+.uploaded-file-info {
+  border: 1px dashed #d9d9d9;
+  background: #fafafa;
+}
+
+.download-sample-link {
+  color: #1890ff;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.download-sample-link:hover {
+  color: #40a9ff;
+  text-decoration: underline;
+}
+
+.upload-progress {
+  text-align: center;
+}
+.upload-form-item {
+  margin: 0px;
+}
+.upload-form-item .ant-form-item-control-input {
+  background: #fff !important;
+  padding: 12px;
+  border-radius: 15px;
+  margin: 0px;
+}
+.csv-preview-wrapper {
+  width: 100%;
+}
+
+.csv-static-preview {
+  display: flex;
+  flex-direction: column; 
+  gap: 8px;
+  padding: 12px 16px;
+  border: 1px solid #D9DCE2;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.file-info-wrapper {
+  display: flex;
+  justify-content: space-between; 
+  align-items: center;
+  width: 100%;
+  gap: 20px;
+}
+
+.csv-static-preview .left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+.csv-static-preview .left img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+
+.file-text {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.file-name {
+  color: #001540;
+  font-weight: 500;
+  font-size: 14px;
+  max-width: 100%;
+  word-break: break-all;
+}
+
+.file-size {
+  color: #596783;
+  font-weight: 400;
+  font-size: 12px;
+}
+
+.csv-static-preview .delete-icon {
+  font-size: 18px;
+  color: #6c7a91;
+  background: #f1f3f5;
+  padding: 6px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: 0.3s ease;
+  flex-shrink: 0;
+}
+
+.progress-wrapper {
+  width: 100%;
+}
+
+.progress-wrapper .ant-progress-line,
+.progress-wrapper .ant-progress-inner,
+.progress-wrapper .ant-progress-bg {
+  height: 7px !important;
+  border-radius: 6px !important;
+}
+
+.upload-preview-text{
+ color: #596783;
+ font-weight: 600;
+ font-style: normal;
+ font-size: 14px;
+}
+.upload-preview-text-inner{
+ color: #596783;
+ font-weight: 400;
+ font-style: normal;
+ font-size: 12px;
+}
+.upload-instructions{
+  border: 2px dashed gainsboro;
+  border-radius: 10px;
+  padding-top: 20px;
+  padding-bottom: 10px;
+}
+.download-sample-link{
+color: #ff7a50;
+}
+.add-new-user span{
+  font-size: 16px;
+  font-weight: 400;
+  letter-spacing: 0.5px;
+  color: #fff;
+  margin-top: 1px;
 }
