@@ -101,7 +101,8 @@ const uri = {
   getCurrencyList: "api/v1/meta/currencies",
   getForexExchangeRate: "api/v1/reference-data/forex-rate",
   updateContractPayoutAccount: "api/v1/contracts/update/payout-account",
-  inviteuser: "api/v1/users/import"
+  inviteuser: "api/v1/users/import",
+  importContract: "api/v1/contract/import",
 };
 
 export const registerUser = async (reqBody: any) => {
@@ -759,6 +760,16 @@ export const updateContractPayoutAccount = async (body: {
 
 export const inviteUser = async (requestBody: any, onUploadProgress?: any): Promise<any> => {
   return await instance.post(uri.inviteuser, requestBody, {
+    onUploadProgress,
+  });
+};
+
+export const importContract = async (
+  requestBody: FormData,
+  onUploadProgress?: (progressEvent: any) => void
+): Promise<any> => {
+  return await instance.post(uri.importContract, requestBody, {
+    headers: { "Content-Type": "multipart/form-data" },
     onUploadProgress,
   });
 };

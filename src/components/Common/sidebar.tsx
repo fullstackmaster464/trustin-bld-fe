@@ -960,7 +960,7 @@ const Sidebar = (props: object | any): any => {
          </div>
       <div className="center" style={{background:'#fff'}}>
             {(collapsed)?
-             <Image src={FormLogo} height={100} width={100} preview={false} className="sidebarlogo" onClick={() => {navigate(Dashboard)}} style={{cursor:'pointer', objectFit:'contain'}}/>:
+             <Image src={FormLogo} height={100} width={60} preview={false} className="sidebarlogo" onClick={() => {navigate(Dashboard)}} style={{cursor:'pointer', objectFit:'contain'}}/>:
               <Image preview={false} height={100} width={100} src={Logo} className="sidebarlogo" onClick={() => {navigate(Dashboard)}} style={{cursor:'pointer',objectFit:'contain'}}/>
             }
             </div>

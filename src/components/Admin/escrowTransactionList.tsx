@@ -15,7 +15,11 @@ import {
   Col,
   Tooltip,
   Typography,
-  Popover
+  Popover,
+  Row,
+  Progress,
+  Form,
+  Upload
 } from "antd";
 import { useNavigate } from "react-router-dom";
 import EscrowTransactionIcon from "../../assets/img/Headers/Escrow_transactions.svg";
@@ -29,7 +33,10 @@ import TabPane from "antd/lib/tabs/TabPane";
 import { useRef, useEffect, useState } from "react";
 import { TransactionDetail } from "../Common/RouteConst";
 import Download_Blue from "../../assets/img/download_blue.svg";
+import modalcloseicon from "../../assets/img/modalclose.svg"
 import Search from "../../assets/img/search.svg";
+import AddBtn from "../../assets/img/addbtn.svg"
+import UploadCsv from "../../assets/img/upload_csv.svg"
 import moment from "moment";
 import {
   downloadDetails,
@@ -45,13 +52,15 @@ import "../../assets/scss/custom.scss";
 import PDF from "../../assets/img/pdf.svg";
 import Doc from "../../assets/img/documentdark.svg";
 import DocDisabled from "../../assets/img/doc.svg";
-import { getInvoicePdf } from "../../services/user";
+import { getInvoicePdf, importContract, } from "../../services/user";
 // import { LoadingOutlined } from "@ant-design/icons";
 import jsPDF from "jspdf";
 import DefaultLayout from "../Common/DefaultLayout";
+import CsvFile from "../../assets/img/csvfile.svg"
 import emptyCard from "../../assets/img/emptyCard.svg"; 
 import { FilterType, getLocalStorage } from "../Common/Constants";
 import { createPdf } from "../User/NewTransaction/pdfGeneratorHelper";
+import { DeleteOutlined, UploadOutlined } from "@ant-design/icons";
 const EscrowTransactionDetails = ():any => {
   const navigate = useNavigate();
   const [selectedUserAlias, setSelectedUserAlias] = useState<any>([]);
@@ -88,6 +97,12 @@ const EscrowTransactionDetails = ():any => {
   const [selectAll, setSelectAll] = useState(false);
   const userType = JSON.parse(getLocalStorage("auth")!)?.userType;
   const [searchInput, setSearchInput] = useState("");
+  const [isUploadModalVisible, setIsUploadModalVisible] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<number>(0);
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [btnLoader, setBtnLoader] = useState(false);
+  const [form] = Form.useForm();
+
   const setWidthVal = () =>{
     setWidth(document.body.clientWidth);
   }
@@ -737,6 +752,66 @@ const EscrowTransactionDetails = ():any => {
     setPage(10);
     fetchEscrowTransactionList(1, 10, "all");
   }
+  
+  const formatFileSize = (bytes: number): string => {
+    if (bytes === 0) return "0 Bytes";
+    const k = 1024;
+    const sizes = ["Bytes", "KB", "MB", "GB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
+  };
+
+  const handleDownloadSampleFile = () => {
+    const link = document.createElement("a");
+    link.href = "/import-user-sample.xlsx"; 
+    link.download = "import-user-sample.xlsx";
+    link.click();
+  };
+
+
+ const onFinishUpload = async () => {
+  if (!uploadedFile) {
+    message.warning("Please select an Excel file before submitting!");
+    return;
+  }
+  try {
+    setBtnLoader(true);
+    setUploadProgress(0);
+
+    const formData = new FormData();
+    formData.append("file", uploadedFile);
+
+    const res = await importContract(formData, (progressEvent: any) => {
+      if (progressEvent.total) {
+        const percent = Math.round(
+          (progressEvent.loaded / progressEvent.total) * 100
+        );
+        setUploadProgress(percent);
+      }
+    });
+    if (res?.data?.errors && res?.data?.errors?.length) {
+      message.error(res?.data?.message || "Some rows failed to import");
+      return;
+    }
+    message.success("Contracts imported successfully!");
+    setIsUploadModalVisible(false);
+    setUploadedFile(null);
+    form.resetFields();
+    setUploadProgress(0);
+    // fetchEscrowTransactionList(1, page, tab);
+    fetchEscrowTransactionList(current, page, tab);
+    // fetchEscrowTransactionList(current, page, "all");
+  } catch (e: any) {
+    console.error(e);
+    message.error(
+      e?.response?.data?.message || "Upload failed! Please try again."
+    );
+  } finally {
+    setBtnLoader(false);
+  }
+};
+  
+  
 
   return (
     <div className="scrollbar-container">
@@ -771,7 +846,7 @@ const EscrowTransactionDetails = ():any => {
         }
       >
               <Card className="noBorder transparent mt-6 kyc-table-list-card-wrap escrow-tran-card">
-                <div className={Width > 767 ? "w-100 endtoend kyc-bottom-header mb-4" : "w-100 endtoend flex-column-reverse gap-2"}>
+                <div className={Width > 1190 ? "w-100 endtoend kyc-bottom-header mb-4" : "w-100 endtoend flex-column-reverse gap-3"}>
                   <div className={Width > 767 ? "d-block dashboardTabs w-100" : "d-block dashboardTabs justify-content-between w-100"}>
                     <Tabs
                       defaultActiveKey="all"
@@ -808,10 +883,21 @@ const EscrowTransactionDetails = ():any => {
                       ></TabPane>
                     </Tabs>
                   </div>
+             <div className={Width > 1190 ? "d-flex justify-content-start align-items-center" : "d-flex justify-content-end align-items-center"}>
+              <Button className="add-new-user"  onClick={() => setIsUploadModalVisible(true)}>
+                <Image 
+                  src={AddBtn} 
+                  alt="addBtn" 
+                  className="add-btn"   
+                  preview={false}
+                />
+                <span className="pe-2">Upload Document</span>
+              </Button>
+                  </div>
                   <div className="d-flex inputFilter justify-content-between">
                     <div className="d-flex w-100">
                       <Input
-                        className="search-input-additem ml-2 px-3"
+                        className={Width > 1190 ? "search-input-additem ml-2 px-3" : "search-input-additem m-0 px-3 "}
                         placeholder="Search"
                         value={searchInput}
                         prefix={
@@ -1090,6 +1176,135 @@ const EscrowTransactionDetails = ():any => {
               </Card>
               </DefaultLayout>
             </div>
+        {/* upload modal */}
+        <Modal
+          title={
+          <div className="d-flex justify-content-between align-items-center">
+            <p className="large-title mb-0">Upload user</p>
+            <img
+              src={modalcloseicon}
+              alt="close-icon"
+              className="cursor"
+              onClick={() => {
+                setIsUploadModalVisible(false);
+                setUploadedFile(null);
+              }}
+            />
+          </div>
+        }
+        className="add-item-category-modal upload-user-modal"
+        open={isUploadModalVisible}
+        footer={null}
+        closable={false}
+        onCancel={() => {
+          setIsUploadModalVisible(false);
+          setUploadedFile(null);
+        }}
+      >
+        <div className="modal-body-wrapper">
+          <hr className="break-line" />
+          <Form form={form} onFinish={onFinishUpload} className="center-form">
+            <div className="upload-instructions text-center mb-3">
+              <Image src={UploadCsv} alt="upload_csv" preview={false} className="mb-3" />
+              <p className="upload-preview-text mb-1">Choose a file or drag & drop it here.</p>
+              <p className="upload-preview-text-inner mb-1">Excel formats up to 50MB</p>
+
+              <span
+                onClick={handleDownloadSampleFile}
+                className="download-sample-link d-flex justify-content-center align-items-center cursor-pointer mb-3"
+              >
+                Download Sample Excel File
+              </span>
+              <Form.Item
+                name="file"
+                className="text-center upload-form-item d-flex justify-content-center align-items-center bg-white"
+                style={{ background: "#fff" }}
+              >
+                <Upload
+                  beforeUpload={() => false}
+                  accept=".xlsx,.xls"
+                  maxCount={1}
+                  onChange={(info) => {
+                    if (info.file) {
+                      setUploadedFile(info.file as any);
+                      form.setFieldsValue({ file: info.file });
+                    }
+                  }}
+                >
+                  <Button icon={<UploadOutlined />} className="upload-csv-btn">
+                    Upload Excel File
+                  </Button>
+                </Upload>
+              </Form.Item>
+            </div>
+            {uploadedFile && (
+              <div className="csv-preview-wrapper mb-4">
+                <div className="csv-static-preview">
+                  <div className="file-info-wrapper">
+                    <div className="left">
+                      <Image src={CsvFile} alt="csvfile" preview={false} />
+                      <div className="file-text">
+                        <span className="file-name">{uploadedFile.name}</span>
+                        <span className="file-size">{formatFileSize(uploadedFile.size)}</span>
+                      </div>
+                    </div>
+
+                    <DeleteOutlined
+                      className="delete-icon cursor-pointer"
+                      onClick={() => {
+                        setUploadedFile(null);
+                        form.setFieldsValue({ file: undefined });
+                        setUploadProgress(0);
+                      }}
+                    />
+                  </div>
+
+                  {uploadProgress > 0 && (
+                    <div className="progress-wrapper">
+                      <Progress
+                        percent={uploadProgress}
+                        strokeWidth={15}
+                        strokeLinecap="butt"
+                        style={{ position: "relative" }}
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+            <hr className="break-line" />
+            <Row gutter={{ xs: 25, sm: 25, md: 25, lg: 25 }}>
+              <Col
+                span={24}
+                className={
+                  Width > 420
+                    ? "w-100 d-flex align-items-center justify-content-between flex-wrap"
+                    : "w-100 d-flex align-items-center justify-content-between flex-wrap flex-column gap-3"
+                }
+              >
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  loading={btnLoader}
+                  className="submit-sheet-button"
+                >
+                  Submit sheet
+                </Button>
+
+                <Button
+                  className="rounded_cancel_btn mx-3 mt-0"
+                  onClick={() => {
+                    form.resetFields();
+                    setUploadedFile(null);
+                  }}
+                >
+                  Clear
+                </Button>
+              </Col>
+            </Row>
+          </Form>
+        </div>
+      </Modal>              
       <Modal
         title={<div className="titleText mt-3 mb-5">Invoice details PDF</div>}
         centered
