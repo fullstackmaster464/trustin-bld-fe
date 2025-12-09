@@ -55,8 +55,7 @@ const TransactionDetails = (props: object | any): any => {
     setRepresentativeData,
     // callingCode,
     taxDetails,
-    setTaxDetails,
-    subContractParty,
+    setTaxDetails, 
   } = props;
   
 
@@ -85,42 +84,17 @@ const TransactionDetails = (props: object | any): any => {
   }, [errorMsg])
 
 
-  // useEffect(() => {
-  //   const UserEmail = JSON.parse(getLocalStorage("auth")!);
-  //   // Fetch the user data once email is retrieved
-  //   if (UserEmail?.email) {
-  //     getUserData(UserEmail.email)
-  //       .then((response: any) => {
-  //         setUserData(response?.data); // Setting the user data after fetching
-  //       })
-  //       .catch((error) => {
-  //         console.error("Error fetching user data:", error);
-  //       });
-  //   }
-  // }, []);
-
-const firstParty = subContractParty;
+  
+const firstParty = formValues?.subContractParty;
 
 const counterPartyOptions = firstParty === USER_TYPE_TEXT.TENENT
   ? [
       { value: USER_TYPE_TEXT.PLANNER, label: "Planner" },
       { value: USER_TYPE_TEXT.CONTRACTOR, label: "Contractor" },
     ]
-  : firstParty
-  ? [{ value: USER_TYPE_TEXT.TENENT, label: "Tenent" }]
-  : [];
-
-// auto selected value 
-
-useEffect(() => {
-  if (!firstParty || !counterPartyOptions.length) return;
-  const current = form.getFieldValue("subContractCounterParty");
-  const validValues = counterPartyOptions.map(o => o.value);
-
-  if (!validValues.includes(current)) {
-    form.setFieldsValue({ subContractCounterParty: validValues[0] });
-  }
-}, [firstParty, form]); 
+  : [{ value: USER_TYPE_TEXT.TENENT, label: "Tenent" }]
+  
+ 
   
   useEffect(() => {
     if (contractId !== undefined) {

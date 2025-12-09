@@ -56,6 +56,7 @@ import AddBankAccountModal from "./AddBankAccountModal";
 const CreateTransaction = (): JSX.Element => {
   const [formValues, setFormValues] = useState<any>({
     userType: USER_TYPE_TEXT.BUYER,
+    subContractParty: USER_TYPE_TEXT.TENENT,
     currency: VALID_CURRENCY[0],
   });
   const [buyerCount, setBuyerCount] = useState(null);

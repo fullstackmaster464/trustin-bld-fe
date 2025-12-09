@@ -1499,30 +1499,13 @@ const handleBuyerCountChange = (count: number) => {
       ? "buyerList"
       : "sellerList";
   };
-  
-  const subContractParty = useWatch("subContractParty", form);
-
-  useEffect(() => {
-    if (!subContractParty) return;
-    const isTenent = subContractParty === USER_TYPE_TEXT.TENENT;
-    const role = isTenent ? USER_TYPE_TEXT.BUYER : USER_TYPE_TEXT.SELLER;
-    const counterParty = isTenent ? USER_TYPE_TEXT.LANDLORD : USER_TYPE_TEXT.TENENT;
-    form.setFieldsValue({ contractStartedBy: role });
-
-    setFormValues((prev: any) => ({
-      ...prev,
-      contractStartedBy: role,
-      subContractParty,
-      subContractCounterParty: counterParty
-    }));
-    onUserTypeChange(role);
-  }, [subContractParty]);
+   
 
   return (
   <> 
     <div>
       <Row gutter={36}>
-      {/* @@@ SANTOSH START */}
+      
      <Col span={Width < 992 ? 24 : 8} className="pe-4">
           <p  className="enter-text-category" style={{ display: 'flex', alignItems: 'center' }}>
             First party
@@ -1540,36 +1523,37 @@ const handleBuyerCountChange = (count: number) => {
           </p>
           <Form.Item
             name="subContractParty"
+            initialValue={USER_TYPE_TEXT.TENENT}
             rules={[
               {
                 required: !isDraft,
-                message: "Item category is required!",
+                message: "First party is required!",
               },
             ]}
             className="inputField w-100 no-bg-select"
           >
             <Select
-              placeholder="Select item category"
+              placeholder="Select First party"
               className="selct-form-field"
+              
               popupClassName="lowerz"
               onChange={(value) => {
-                console.log("value",value);
+                const selectedRole = value == USER_TYPE_TEXT.TENENT ? USER_TYPE_TEXT.BUYER : USER_TYPE_TEXT.SELLER;
+                form.setFieldsValue({ contractStartedBy: selectedRole });
+                setFormValues((prev: any) => ({ ...prev, contractStartedBy: selectedRole , subContractParty : value }));
+                onUserTypeChange(selectedRole);
               }}
               showSearch
               allowClear
-              optionFilterProp="children"
-            >
-              <Option key={USER_TYPE_TEXT.TENENT} value={USER_TYPE_TEXT.TENENT}> {USER_TYPE_TEXT.TENENT} </Option>
-              <Option key={USER_TYPE_TEXT.PLANNER} value={USER_TYPE_TEXT.PLANNER}> {USER_TYPE_TEXT.PLANNER} </Option>
-              <Option key={USER_TYPE_TEXT.CONTRACTOR} value={USER_TYPE_TEXT.CONTRACTOR}> {USER_TYPE_TEXT.CONTRACTOR} </Option>
+              optionFilterProp="children">
+              <Option key={USER_TYPE_TEXT.TENENT} value={USER_TYPE_TEXT.TENENT}> Tenent</Option>
+              <Option key={USER_TYPE_TEXT.PLANNER} value={USER_TYPE_TEXT.PLANNER}> Planner </Option>
+              <Option key={USER_TYPE_TEXT.CONTRACTOR} value={USER_TYPE_TEXT.CONTRACTOR}> Contractor </Option>
               
             </Select>
           </Form.Item>
-        </Col>
+        </Col> 
 
-         
-
-    {/* @@@ SANTOSH START */} 
         <Col md={24} className="radioInput">
           <Form.Item
             name="contractStartedBy"
@@ -1582,22 +1566,12 @@ const handleBuyerCountChange = (count: number) => {
             ]}
           >
         <Radio.Group
-         name="userType"
-         value={form.getFieldValue("contractStartedBy")} 
-          onChange={(e) => {
-            const selectedRole = e.target.value;
-            if (subContractParty === USER_TYPE_TEXT.TENENT && selectedRole !== USER_TYPE_TEXT.BUYER) {
-              return;
-            }
-            if (subContractParty !== USER_TYPE_TEXT.TENENT && selectedRole !== USER_TYPE_TEXT.SELLER) {
-              return;
-            }
-            setdidsubmit(1);
-            form.setFieldsValue({ contractStartedBy: selectedRole });
-            handleChange(e);
-            setFormValues((prev: any) => ({ ...prev, contractStartedBy: selectedRole }));
-            onUserTypeChange(selectedRole);
-          }}
+          name="userType"
+              onChange={(e: any) => {
+                setdidsubmit(1);
+                handleChange(e);
+                onUserTypeChange(e.target.value);
+              }}
           buttonStyle="solid"
           className="stepDetails_medium fw-400 width-50-rem"
         >
@@ -2375,7 +2349,7 @@ const handleBuyerCountChange = (count: number) => {
         setRepresentativeData={setRepresentativeData}
         taxDetails={taxDetails}
         setTaxDetails={setTaxDetails}
-        subContractParty={subContractParty}
+        // subContractParty={subContractParty}
         />
 
         <Row gutter={36}>
