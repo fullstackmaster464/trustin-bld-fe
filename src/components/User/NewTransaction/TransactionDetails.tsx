@@ -1,5 +1,5 @@
 /* eslint-disable prefer-const */
-import { Button, Col, Form, Input, Modal, Row, Select, message } from "antd";
+import { Button, Col, Form, Input, Modal, Row, Select, Tooltip, message } from "antd";
 import React, { useEffect, useRef, useState } from "react";
 import { AuthTitle, NormalText } from "../../ui-elements/TextRepo";
 import { SecondaryOutLineButton } from "../../ui-elements/ButtonRepo";
@@ -21,6 +21,8 @@ import { getAllCountries } from "../../../services/masterData";
 // import { InputText } from "../../ui-elements/InputsRepo";
 import CountryFlag from "../../Common/CountryFlag";
 import { calculateUserPlatformFee } from "../../Common/InvoiceCalculations";
+import infoIcon from "../../../assets/img/informIcon.svg"
+// import { useWatch } from "antd/es/form/Form";
 // import { InputText } from "../../ui-elements/InputsRepo";
 
 const TransactionDetails = (props: object | any): any => {
@@ -53,7 +55,8 @@ const TransactionDetails = (props: object | any): any => {
     setRepresentativeData,
     // callingCode,
     taxDetails,
-    setTaxDetails
+    setTaxDetails,
+    subContractParty,
   } = props;
   
 
@@ -96,7 +99,29 @@ const TransactionDetails = (props: object | any): any => {
   //   }
   // }, []);
 
+const firstParty = subContractParty;
 
+const counterPartyOptions = firstParty === USER_TYPE_TEXT.TENENT
+  ? [
+      { value: USER_TYPE_TEXT.PLANNER, label: "Planner" },
+      { value: USER_TYPE_TEXT.CONTRACTOR, label: "Contractor" },
+    ]
+  : firstParty
+  ? [{ value: USER_TYPE_TEXT.TENENT, label: "Tenent" }]
+  : [];
+
+// auto selected value 
+
+useEffect(() => {
+  if (!firstParty || !counterPartyOptions.length) return;
+  const current = form.getFieldValue("subContractCounterParty");
+  const validValues = counterPartyOptions.map(o => o.value);
+
+  if (!validValues.includes(current)) {
+    form.setFieldsValue({ subContractCounterParty: validValues[0] });
+  }
+}, [firstParty, form]); 
+  
   useEffect(() => {
     if (contractId !== undefined) {
        
@@ -856,7 +881,33 @@ const TransactionDetails = (props: object | any): any => {
           </Form.Item>
         </Col>
       </Row> */}
-      
+    
+   <Row gutter={36}>
+        {/*Counter Party Dropdown */}
+        <Col span={Width < 992 ? 24 : 8} className="pe-4">
+          <p className="enter-text-category" style={{ display: 'flex', alignItems: 'center' }}>
+            Counter party
+            <Tooltip title={ <span className="response-tooltip">Automatically filtered based on first party</span> }
+                          overlayClassName='custom-tooltip info-icon'
+                          placement={Width > 475 ? "right" : "top"}
+                        >
+               <img src={infoIcon} className="ms-1 mt-1" alt="info" />
+            </Tooltip>
+          </p>
+          <Form.Item
+            name="subContractCounterParty"
+            rules={[{ required: !isDraft, message: "Counter party is required!" }]}
+          >
+            <Select
+              placeholder="Select counter party"
+              allowClear
+              showSearch
+              options={counterPartyOptions}
+              disabled={!firstParty}
+            />
+          </Form.Item>
+        </Col>
+      </Row>
        <Row gutter={36}>
         {formValues?.userType === USER_TYPE_TEXT.BUYER ? (
           <>

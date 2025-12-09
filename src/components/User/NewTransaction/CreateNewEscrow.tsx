@@ -1499,8 +1499,25 @@ const handleBuyerCountChange = (count: number) => {
       ? "buyerList"
       : "sellerList";
   };
- 
   
+  const subContractParty = useWatch("subContractParty", form);
+
+  useEffect(() => {
+    if (!subContractParty) return;
+    const isTenent = subContractParty === USER_TYPE_TEXT.TENENT;
+    const role = isTenent ? USER_TYPE_TEXT.BUYER : USER_TYPE_TEXT.SELLER;
+    const counterParty = isTenent ? USER_TYPE_TEXT.LANDLORD : USER_TYPE_TEXT.TENENT;
+    form.setFieldsValue({ contractStartedBy: role });
+
+    setFormValues((prev: any) => ({
+      ...prev,
+      contractStartedBy: role,
+      subContractParty,
+      subContractCounterParty: counterParty
+    }));
+    onUserTypeChange(role);
+  }, [subContractParty]);
+
   return (
   <> 
     <div>
@@ -1564,21 +1581,31 @@ const handleBuyerCountChange = (count: number) => {
               },
             ]}
           >
-            <Radio.Group
-              name="userType"
-              onChange={(e: any) => {
-                setdidsubmit(1);
-                handleChange(e);
-                onUserTypeChange(e.target.value);
-              }}
-              buttonStyle="solid"
-              className="stepDetails_medium fw-400 width-50-rem"
-            >
-              {userType === 'ESCROW_ADVISOR' ? <Radio value={USER_TYPE_TEXT.ESCROW_ADVISOR}>I am Escrow Advisor</Radio> : <>
-              <Radio value={USER_TYPE_TEXT.BUYER}>I am {modifyCresetUserType(userAlias,'buyer')}</Radio>
-              <Radio value={USER_TYPE_TEXT.SELLER}>I am {modifyCresetUserType(userAlias,'seller')}</Radio>
-              </>}
-            </Radio.Group>
+        <Radio.Group
+         name="userType"
+         value={form.getFieldValue("contractStartedBy")} 
+          onChange={(e) => {
+            const selectedRole = e.target.value;
+            if (subContractParty === USER_TYPE_TEXT.TENENT && selectedRole !== USER_TYPE_TEXT.BUYER) {
+              return;
+            }
+            if (subContractParty !== USER_TYPE_TEXT.TENENT && selectedRole !== USER_TYPE_TEXT.SELLER) {
+              return;
+            }
+            setdidsubmit(1);
+            form.setFieldsValue({ contractStartedBy: selectedRole });
+            handleChange(e);
+            setFormValues((prev: any) => ({ ...prev, contractStartedBy: selectedRole }));
+            onUserTypeChange(selectedRole);
+          }}
+          buttonStyle="solid"
+          className="stepDetails_medium fw-400 width-50-rem"
+        >
+         {userType === 'ESCROW_ADVISOR' ? <Radio value={USER_TYPE_TEXT.ESCROW_ADVISOR}>I am Escrow Advisor</Radio> : <>
+          <Radio value={USER_TYPE_TEXT.BUYER}>I am {modifyCresetUserType(userAlias,'buyer')}</Radio>
+          <Radio value={USER_TYPE_TEXT.SELLER}>I am {modifyCresetUserType(userAlias,'seller')}</Radio>
+         </>}
+        </Radio.Group>
           </Form.Item>
         </Col>
       </Row> 
@@ -2303,7 +2330,7 @@ const handleBuyerCountChange = (count: number) => {
           { formValues?.userType === USER_TYPE_TEXT.BUYER ? (
             <div className="titleText mt-4 mb-4">
               {" "}
-              {modifyCresetUserType(userAlias,'Seller')}&apos;s details
+              {modifyCresetUserType(userAlias,'Counter party')}&apos;s details
             </div>
           ) : formValues?.userType === USER_TYPE_TEXT.SELLER ? (
             <div className="titleText mt-4 mb-4">
@@ -2348,6 +2375,7 @@ const handleBuyerCountChange = (count: number) => {
         setRepresentativeData={setRepresentativeData}
         taxDetails={taxDetails}
         setTaxDetails={setTaxDetails}
+        subContractParty={subContractParty}
         />
 
         <Row gutter={36}>
