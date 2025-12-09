@@ -1505,6 +1505,54 @@ const handleBuyerCountChange = (count: number) => {
   <> 
     <div>
       <Row gutter={36}>
+      {/* @@@ SANTOSH START */}
+     <Col span={Width < 992 ? 24 : 8} className="pe-4">
+          <p  className="enter-text-category" style={{ display: 'flex', alignItems: 'center' }}>
+            First party
+            <Tooltip
+              title={
+                <span className="response-tooltip">
+                  Choose the transaction initiate party
+                </span>
+              }
+              overlayClassName='custom-tooltip info-icon'
+              placement={Width > 475 ? "right" : "top"}
+            >
+              <img src={infoIcon} className="ms-1 mt-1"/>
+            </Tooltip>
+          </p>
+          <Form.Item
+            name="subContractParty"
+            rules={[
+              {
+                required: !isDraft,
+                message: "Item category is required!",
+              },
+            ]}
+            className="inputField w-100 no-bg-select"
+          >
+            <Select
+              placeholder="Select item category"
+              className="selct-form-field"
+              popupClassName="lowerz"
+              onChange={(value) => {
+                console.log("value",value);
+              }}
+              showSearch
+              allowClear
+              optionFilterProp="children"
+            >
+              <Option key={USER_TYPE_TEXT.TENENT} value={USER_TYPE_TEXT.TENENT}> {USER_TYPE_TEXT.TENENT} </Option>
+              <Option key={USER_TYPE_TEXT.PLANNER} value={USER_TYPE_TEXT.PLANNER}> {USER_TYPE_TEXT.PLANNER} </Option>
+              <Option key={USER_TYPE_TEXT.CONTRACTOR} value={USER_TYPE_TEXT.CONTRACTOR}> {USER_TYPE_TEXT.CONTRACTOR} </Option>
+              
+            </Select>
+          </Form.Item>
+        </Col>
+
+         
+
+    {/* @@@ SANTOSH START */} 
         <Col md={24} className="radioInput">
           <Form.Item
             name="contractStartedBy"

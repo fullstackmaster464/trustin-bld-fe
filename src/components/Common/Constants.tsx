@@ -81,7 +81,10 @@ export const USER_TYPE_TEXT : {[key:string]: any} = {
   MAKER: "MAKER",
   CHECKER: "CHECKER",
   GUEST_SELLER: "Guest Seller",
-  GUEST: "Guest"
+  GUEST: "Guest",
+  TENENT: "TENENT",
+  PLANNER: "PLANNER",
+  CONTRACTOR: "CONTRACTOR"
 };
 
 
