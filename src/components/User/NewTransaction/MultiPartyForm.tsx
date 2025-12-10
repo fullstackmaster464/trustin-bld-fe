@@ -17,6 +17,7 @@ interface PartyFormProps {
     countryList: any[];
     form: any
     getLabel: (type: string, field: string, id: number) => { label: string; placeholder: string };
+    mainPartyRole?: string;
 }
 
 export const MultiPartyForm = ({
@@ -30,8 +31,31 @@ export const MultiPartyForm = ({
     validateContactNumber,
     searchUserByEmail,
     form,
-    getLabel,
+    // getLabel,
+    mainPartyRole = "Buyer",
 }: PartyFormProps) => { 
+    
+const getDynamicLabel = (field: string, id: number) => {
+  const role = mainPartyRole || "Party";
+
+  const Role = role === "BUYER" ? "Buyer" : 
+               role === "SELLER" ? "Seller" : 
+               role.charAt(0).toUpperCase() + role.slice(1).toLowerCase();
+  const roleLower = Role.toLowerCase();
+  const fieldDisplay = {
+    name:    "name",
+    email:   "email",
+    contact: "contact number",
+    country: "country"
+  }[field] || field;
+
+  return {
+    label: `${Role} ${id} ${fieldDisplay}`,                
+    placeholder: field === "country" 
+                  ? `Select ${roleLower} ${id} country` 
+                  : `Enter ${roleLower} ${id} ${fieldDisplay}`   
+  };
+};
 
     const getPartyFieldName = (party: any) =>
         party.type === "BUYER" ? "buyerList" : "sellerList";
@@ -80,7 +104,7 @@ export const MultiPartyForm = ({
                                     className="titleText gap-2 d-flex align-items-center cursor"
                                     onClick={() => markAsMainParty(party.id)}
                                 >
-                                    {title} {index + 1}
+                                    {getDynamicLabel("name", index + 1).label.replace(" name", "")}
                                 </div>
                             </Tooltip>
                         </div>
@@ -88,7 +112,10 @@ export const MultiPartyForm = ({
                         <Row gutter={16}>
                             {/* EMAIL */}
                             <Col span={width < 992 ? 24 : 8} className="pe-4">
-                                <p className="enter-text-category">{getLabel(party.type, "email", index + 1).label}</p>
+                                <p className="enter-text-category">
+                                    {getDynamicLabel("email", index + 1).label}
+                                    {/* {getLabel(party.type, "email", index + 1).label} */}
+                                    </p>
                                         <Form.Item
                                             name={[listName, party.id, "email"]}
                                             className="inputField w-100 error-input"
@@ -119,7 +146,8 @@ export const MultiPartyForm = ({
                                         >
                                             <Input
                                                 disabled={index === 0 ? true : false}
-                                                placeholder={getLabel(party.type, "email", index + 1).placeholder}
+                                                // placeholder={getLabel(party.type, "email", index + 1).placeholder}
+                                                placeholder={getDynamicLabel("email", index + 1).placeholder}
                                                 onBlur={(e) => {
                                                     updatePartyField(party.id, "email", e.target.value)                                                    
                                                 }}
@@ -132,7 +160,10 @@ export const MultiPartyForm = ({
 
                             {/* NAME */}
                             <Col span={width < 992 ? 24 : 8} className="pe-4">
-                                <p className="enter-text-category">{getLabel(party.type, "name", index + 1).label}</p>
+                                <p className="enter-text-category">
+                                    {/* {getLabel(party.type, "name", index + 1).label} */}
+                                     {getDynamicLabel("name", index + 1).label}
+                                    </p>
                                 <Form.Item
                                     name={[listName, party.id, "name"]}
                                     className="inputField w-100 error-input"
@@ -145,7 +176,8 @@ export const MultiPartyForm = ({
                                 >
                                     <Input
                                         disabled={party.isAutoFilled || index === 0 ? true : false}
-                                        placeholder={getLabel(party.type, "name", index + 1).placeholder}
+                                        // placeholder={getLabel(party.type, "name", index + 1).placeholder}
+                                        placeholder={getDynamicLabel("name", index + 1).placeholder}
                                         maxLength={50}
                                         onChange={(e) => updatePartyField(party.id, "name", e.target.value)}
 
@@ -155,7 +187,10 @@ export const MultiPartyForm = ({
 
                             {/* COUNTRY */}
                             <Col span={width < 992 ? 24 : 8} className="pe-4">
-                                <p className="enter-text-category">{getLabel(party.type, "country", index + 1).label}</p>
+                                <p className="enter-text-category">
+                                    {/* {getLabel(party.type, "country", index + 1).label} */}
+                                    {getDynamicLabel("country", index + 1).label}
+                                    </p>
                                 <Form.Item
                                     name={[listName, party.id, "country"]} 
                                     className="modal_inputField w-100 select"
@@ -167,7 +202,8 @@ export const MultiPartyForm = ({
                                         <Select
                                             disabled={party.isAutoFilled || index === 0 ? true : false}
                                             value={party.country || null}
-                                            placeholder="Select country"
+                                            // placeholder="Select country"
+                                            placeholder={getDynamicLabel("country", index + 1).placeholder}
                                             onChange={(value) => {
                                                 updatePartyField(party.id, "country", value);
                                                 const listName = party.type === "BUYER" ? "buyerList" : "sellerList";
@@ -195,7 +231,10 @@ export const MultiPartyForm = ({
 
                             {/* CONTACT */}
                             <Col span={width < 992 ? 24 : 8} className="pe-4">
-                                <p className="enter-text-category">{getLabel(party.type, "contact", index + 1).label}</p>
+                                <p className="enter-text-category">
+                                    {getDynamicLabel("contact", index + 1).label}
+                                    {/* {getLabel(party.type, "contact", index + 1).label} */}
+                                    </p>
                                 <Form.Item
                                     name={[listName, party.id, "contact"]}
                                     className="inputField w-100 error-input"
@@ -220,7 +259,8 @@ export const MultiPartyForm = ({
                                         prefix={getCallingCode(party.country) || ""}
                                         className="input_callingcode"
                                         maxLength={10}
-                                        placeholder={getLabel(party.type, "contact", index + 1).placeholder}
+                                        // placeholder={getLabel(party.type, "contact", index + 1).placeholder}
+                                         placeholder={getDynamicLabel("contact", index + 1).placeholder}
                                         onChange={(e) => updatePartyField(party.id, "contact", e.target.value)}
                                     />
                                 </Form.Item>

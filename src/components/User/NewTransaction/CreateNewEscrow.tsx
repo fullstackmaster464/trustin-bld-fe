@@ -1587,11 +1587,14 @@ const handleBuyerCountChange = (count: number) => {
         <Col> 
       
           <div>
-            <span className="stepDetails fw-400 mb-2 mt-3 textOverflow" style={{whiteSpace: "wrap"}}>
-              {selectedUserType === USER_TYPE_TEXT.BUYER
-                ? "Do you want to enable multi-buyer?"
-                : "Do you want to enable multi-seller?"} 
-                  </span>
+           <span
+            className="stepDetails fw-400 mb-2 mt-3 textOverflow"
+            style={{ whiteSpace: "wrap" }}
+          >
+            {formValues?.subContractParty
+              ? `Do you want to enable multi-${formValues.subContractParty.toLowerCase()}?`
+              : ""}
+          </span>
           </div> 
           <div>
             <Form.Item className="mb-3 radioInput" name="multipartyOption"  initialValue="NO"> 
@@ -1622,9 +1625,9 @@ const handleBuyerCountChange = (count: number) => {
             <Col span={Width < 992 ? 24 : 8}>
               <div>
                 <span className="stepDetails fw-400 mb-2 mt-3 textOverflow" style={{whiteSpace: "wrap"}}>  
-                  {selectedUserType === USER_TYPE_TEXT.BUYER
-                    ? "Select number of buyers"
-                    : "Select number of sellers"}
+                    {formValues?.subContractParty
+              ? `Select number of ${formValues.subContractParty.toLowerCase()}?`
+              : ""}
                 </span>
               </div>
               <div>
@@ -1639,9 +1642,15 @@ const handleBuyerCountChange = (count: number) => {
                   ]}
                 >
                   <Select
-                    placeholder={selectedUserType === USER_TYPE_TEXT.BUYER
-                    ? "Select number of Buyers"
-                    : "Select number of Sellers"}
+                    placeholder=
+                  //   {
+                  //     selectedUserType === USER_TYPE_TEXT.BUYER
+                  //   ? "Select number of Buyers"
+                  //   : "Select number of Sellers"
+                  // }
+                   {formValues?.subContractParty
+                  ? `Select number of ${formValues.subContractParty.toLowerCase()}?`
+                  : ""}
                     value={buyerCount || undefined}
                     onChange={handleBuyerCountChange}
                     options={[2, 3, 4, 5].map(n => ({ label: n, value: n }))}
@@ -1652,22 +1661,31 @@ const handleBuyerCountChange = (count: number) => {
             <Col span={Width < 992 ? 24 : 8}>
               <div>
                 <span className="stepDetails fw-400 mb-2 mt-3 textOverflow" style={{ whiteSpace: "wrap" }}>
-                  {selectedUserType === USER_TYPE_TEXT.BUYER
+                  {/* {selectedUserType === USER_TYPE_TEXT.BUYER
                     ? "Select main buyer"
-                    : "Select main seller"}
+                    : "Select main seller"} */}
+                 {formValues?.subContractParty
+              ? `Select main ${formValues.subContractParty.toLowerCase()}?`
+              : ""}
                 </span>
               </div>
 
               <div>
                 <Form.Item className="w-100 inputField">
                   <Select
-                    placeholder={`Select main ${selectedUserType === USER_TYPE_TEXT.BUYER ? "buyer" : "seller"}`}
+                    placeholder=
+                     {formValues?.subContractParty
+                    ? `Select main ${formValues.subContractParty.toLowerCase()}?`
+                    : ""}
+                    // {`Select main ${selectedUserType === USER_TYPE_TEXT.BUYER ? "buyer" : "seller"}`}
                     value={buyers.find((b: { isMain: any; }) => b.isMain)?.id || undefined}
                     onChange={(id) => {
                       markAsMainParty(id);
                     }}
                     options={buyers.map((p: { id: any; }, index: number) => ({
-                      label: `${selectedUserType === USER_TYPE_TEXT.BUYER ? "Buyer" : "Seller"} ${index + 1}`,
+                      // label: `${selectedUserType === USER_TYPE_TEXT.BUYER ? "Buyer" : "Seller"} ${index + 1}`,
+                      label: `${formValues.subContractParty.toLowerCase()} ${index + 1}`,
+                      
                       value: p.id,
                     }))}
                   />
@@ -1693,6 +1711,7 @@ const handleBuyerCountChange = (count: number) => {
         getLabel={getLabel}
         countryList={countryList} 
         searchUserByEmail={searchUserByEmail}
+        mainPartyRole={formValues?.subContractParty || selectedUserType}
       />
 
       <hr className="lightgrayHr" />
@@ -2595,7 +2614,7 @@ const handleBuyerCountChange = (count: number) => {
                     markAsMainPartyOpposite(id);
                   }}
                   options={buyersOpposite.map((p: { id: any; }, index: number) => ({
-                    label: `${selectedUserType === USER_TYPE_TEXT.BUYER ? "Seller" : "Buyer"} ${index + 1}`,
+                    label: `${selectedUserType === USER_TYPE_TEXT.BUYER ? "Seller SANTOSH" : "Buyer"} ${index + 1}`,
                     value: p.id,
                   }))}
                 />
@@ -2618,6 +2637,7 @@ const handleBuyerCountChange = (count: number) => {
         searchUserByEmail={searchUserByEmailOpposite} 
         getLabel={getLabel}
         countryList={countryList}
+        mainPartyRole={formValues?.subContractParty || selectedUserType}
       />
     </div> 
    </>
