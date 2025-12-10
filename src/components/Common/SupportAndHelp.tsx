@@ -266,8 +266,7 @@ const SupportAndHelp = ():any => {
                       </Select>
                     </Form.Item>
                   </Col>
-                  <Col xs={24} sm={24} md={24} lg={12} xl={12} 
-                  className={Width < 992 ? "mb-2" : "mb-0"}>
+                  <Col xs={24} sm={24} md={24} lg={12} xl={12} className={Width < 992 ? "pb-4" : "mb-0"}>
                     <p className="support-list-label pb-4">Description</p>
                   <Form.Item
                     name="description"
@@ -276,7 +275,7 @@ const SupportAndHelp = ():any => {
                         validator: (_, value) => validatePopupCommentFields(value),
                       },
                     ]}
-                    className="comment_inputFields"
+                    className="comment_inputFields w-100 description-form-item"
                         >
                   <TextArea
                     rows={5}
@@ -291,7 +290,7 @@ const SupportAndHelp = ():any => {
                     <div
                      className={
                           Width < 992
-                            ? "d-flex support-upload mt-3"
+                            ? "d-flex support-upload"
                             : "d-flex support-upload"
                         }
                     >

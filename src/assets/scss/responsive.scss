@@ -106,8 +106,16 @@
   .bgColorTrans{
     padding: 7px 25px 7px 25px !important;
   }
+    .routing-code-input-field.w-100 {
+    width: 100% !important;
+}
 }
 
+@media screen and (min-width: 993px) and (max-width: 1198px) {
+  .routing-code-input-field.w-100 {
+    width: 87% !important;
+}
+}
 
 @media (min-width:993px) and (max-width:1395px){
   .escrow-fields{
