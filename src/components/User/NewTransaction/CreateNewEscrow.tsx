@@ -122,7 +122,7 @@ const CreateNewEscrow = (props: object|any):any => {
   const [errorMsg, setErrorMsg] = useState(false);
   const [minimumValue, setMinimumValue] = useState<any>();
   
-  console.warn(setMinimumValue);
+  
   
   const [UserData, setUserData] = useState<any>({});
   const [Width, setWidth] = useState(document?.body?.clientWidth);
@@ -311,7 +311,8 @@ const CreateNewEscrow = (props: object|any):any => {
             
             getContractsDetails(contractId, isDraftedContract == "true" ? "draft" : "")
             .then((resp) => {  
-
+            
+              
               setFormValues((prevState:any) => ({
                 ...prevState,
                 name:resp?.data?.getContractDetails?.name, 
@@ -544,6 +545,8 @@ const CreateNewEscrow = (props: object|any):any => {
     setItemType(itemTypeAlias);
     setInputFields([]);
     const data:any = itemTypeList.filter((item:any) => item.aliasName === itemTypeAlias)
+    
+    
     setitemName(data?.[0]?.name);
     setCategoryList(
       data[0]
@@ -559,10 +562,18 @@ const onItemCategoryChange = async (itemCategoryAlias: any) => {
     try {
    
       const fixPlatformCharge = await getItemTypeCategoryByItemAlias(itemCategoryAlias);
+   
+      
       const userPlatformCharge = await getUserPlatformFees(userAlias, TRANSACTION_TYPE.ESCROW);
        const counterUserPlatformCharge:any = counterUserAlias ?  await getUserPlatformFees(counterUserAlias, TRANSACTION_TYPE.ESCROW): {};
       
+       if(fixPlatformCharge?.data && fixPlatformCharge?.data?.minimumPlatformCharge && parseFloat(fixPlatformCharge?.data?.minimumPlatformCharge) > 0){
+        setMinimumValue(parseFloat(fixPlatformCharge?.data?.minimumPlatformCharge))
+       }
+
       setcategoryName(fixPlatformCharge?.data?.name);
+      
+
 
       // base tax details from fixPlatformCharge
       let taxDetailsObj:any;
@@ -684,6 +695,13 @@ const onItemCategoryChange = async (itemCategoryAlias: any) => {
       setUserData(response?.data);
     })
   },[])
+
+
+
+  const getCounterLabel = () => {
+      const v = String(form.getFieldValue("subContractCounterParty") || "Counter");
+      return v.charAt(0).toUpperCase() + v.slice(1).toLowerCase();
+  };
 
 
 
@@ -2320,22 +2338,17 @@ const handleBuyerCountChange = (count: number) => {
         </> : null}
         <hr className="lightgrayHr mb-5 mt-4" />
         <div>
-          { formValues?.userType === USER_TYPE_TEXT.BUYER ? (
-            <div className="titleText mt-4 mb-4">
-              {" "}
-              {modifyCresetUserType(userAlias,'Counter party')}&apos;s details
-            </div>
-          ) : formValues?.userType === USER_TYPE_TEXT.SELLER ? (
-            <div className="titleText mt-4 mb-4">
-              {" "}
-              {modifyCresetUserType(userAlias,'Buyer')}&apos;s details
-            </div>
-          ) : userType === "ESCROW_ADVISOR" && formValues?.userType === USER_TYPE_TEXT.ESCROW_ADVISOR ? (
+          { userType === "ESCROW_ADVISOR" && formValues?.userType === USER_TYPE_TEXT.ESCROW_ADVISOR ? 
             <div className="titleText mt-4 mb-4">
               {" "}
               Details
             </div>
-          ) : null}
+           : 
+           <div className="titleText mt-4 mb-4">
+              {" "}
+              {modifyCresetUserType(userAlias,'Counter party')}&apos;s details
+            </div>
+            }
         </div>
         <TransactionDetails
         formValues={formValues}
@@ -2368,6 +2381,7 @@ const handleBuyerCountChange = (count: number) => {
         setRepresentativeData={setRepresentativeData}
         taxDetails={taxDetails}
         setTaxDetails={setTaxDetails}
+        counterLabel={getCounterLabel()}
         // subContractParty={subContractParty}
         />
 
@@ -2375,7 +2389,7 @@ const handleBuyerCountChange = (count: number) => {
     
         {formValues?.userType !== USER_TYPE_TEXT.SELLER ?
         <Col span={Width > 992 ? 8 : 24}>
-              <p className="seller-text-category agreement-text-category">{modifyCresetUserType(userAlias,'Seller')}’s contact number </p>
+              <p className="seller-text-category agreement-text-category">{getCounterLabel()}’s contact number </p>
               <Form.Item
                 name="sellerContactNumber"
                 className="inputField w-100 error-input"
@@ -2383,7 +2397,7 @@ const handleBuyerCountChange = (count: number) => {
                 rules={[
                   {
                     required: !isDraft,
-                    message: `${modifyCresetUserType(userAlias,'Seller')} contact number is required!`,
+                    message: `${getCounterLabel()} contact number is required!`,
                   },
                   {
                     validator: validateContactNumber(callingCode),
@@ -2394,7 +2408,7 @@ const handleBuyerCountChange = (count: number) => {
                 addonBefore={<CallingCodeContract callingCode={callingCode} setCallingCode={setCallingCode} isoCode={isoCode} setIsoCode={setIsoCode}/>}
                 prefix={callingCode}
                   disabled={userExists}
-                  placeholder={`Enter ${modifyCresetUserType(userAlias,'seller')} contact number`}
+                  placeholder={`Enter ${getCounterLabel()} contact number`}
                   onInput={() => {
                     setdidsubmit(1);
                   }}
@@ -2409,7 +2423,7 @@ const handleBuyerCountChange = (count: number) => {
               </Form.Item>
             </Col>:
             <Col span={Width > 992 ? 8 : 24}>
-              <p className="enter-text-category agreement-text-category">Buyer’s contact number</p>
+              <p className="enter-text-category agreement-text-category">{getCounterLabel()} contact number</p>
               <Form.Item
                 name="buyerContactNumber"
                 className="inputField w-100 error-input"
@@ -2417,7 +2431,7 @@ const handleBuyerCountChange = (count: number) => {
                 rules={[
                   {
                     required: !isDraft,
-                    message: `${modifyCresetUserType(userAlias,'Buyer')} contact number is required!`,
+                    message: `${getCounterLabel()} contact number is required!`,
                   },
                   {
                     validator: validateContactNumber(callingCode),
@@ -2428,7 +2442,7 @@ const handleBuyerCountChange = (count: number) => {
                 addonBefore={<CallingCodeContract callingCode={callingCode} setCallingCode={setCallingCode} isoCode={isoCode} setIsoCode={setIsoCode}/>}
                   prefix={callingCode}
                   disabled={userExists}
-                  placeholder={`Enter ${modifyCresetUserType(userAlias,'buyer')} contact number`}
+                  placeholder={`Enter ${getCounterLabel()} contact number`}
                   maxLength={15}
                   onChange={contactNumber}
                 />

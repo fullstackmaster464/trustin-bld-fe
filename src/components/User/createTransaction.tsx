@@ -719,6 +719,8 @@ const CreateTransaction = (): JSX.Element => {
         if(leftAmount != 0 && requestBody.isMilestone){
           message.error("Please add your remaining amount to Milestone!")
         }
+        // console.log("requestBody==>",requestBody);
+         
         if (
           (leftAmount === 0 || !requestBody.isMilestone) &&
           !countryError.status

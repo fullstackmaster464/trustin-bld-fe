@@ -56,6 +56,7 @@ const TransactionDetails = (props: object | any): any => {
     // callingCode,
     taxDetails,
     setTaxDetails, 
+    counterLabel
   } = props;
   
 
@@ -101,6 +102,7 @@ const counterPartyOptions = firstParty === USER_TYPE_TEXT.TENENT
        
       getContractDetails(contractId, userAlias, (isDraft == true || isDraftedContract == "true") ? "draft" : "")
         .then((resp: any) => {
+
         
          
           if (
@@ -229,6 +231,7 @@ const counterPartyOptions = firstParty === USER_TYPE_TEXT.TENENT
                 buyerCountry: buyerCountry,
                 buyerTransactionFor: resp?.data?.agreementType,
                 buyerCompanyName: contactName,
+                
               });
 
               setFormValues((prevState:any) => ({
@@ -419,6 +422,20 @@ const counterPartyOptions = firstParty === USER_TYPE_TEXT.TENENT
                 advisorContactNumber: resp?.data?.escrowAdvisorDetails?.contactNumber
               })
             }
+
+
+            setFormValues((prevState:any) => ({
+                ...prevState,
+                subContractParty: resp?.data?.subContractParty,
+                subContractCounterParty: resp?.data?.subContractCounterParty,
+            }));
+                
+            form.setFieldsValue({
+                subContractParty: resp?.data?.subContractParty,
+                subContractCounterParty: resp?.data?.subContractCounterParty
+            });
+
+
           }
           
         })
@@ -824,6 +841,8 @@ const counterPartyOptions = firstParty === USER_TYPE_TEXT.TENENT
     }
   };
 
+  
+
   return (
 
     <>
@@ -882,37 +901,41 @@ const counterPartyOptions = firstParty === USER_TYPE_TEXT.TENENT
           </Form.Item>
         </Col>
       </Row>
+      
        <Row gutter={36}>
         {formValues?.userType === USER_TYPE_TEXT.BUYER ? (
           <>
             <Col span={Width > 992 ? 8 : 24}>
-              <p className="seller-text-category">{modifyCresetUserType(userAlias, 'Seller')}’s contact email</p>
+                <p className="seller-text-category">
+                {counterLabel} contact email
+                </p>
               <Form.Item
                 name="sellerContactEmail"
                 className={`inputField w-100 error-input ${sellerCountryError?.status ? 'error-border' : ''}`}
                 rules={[
                   {
                     required: !isDraft,
-                    message: `${modifyCresetUserType(userAlias, 'Seller')} contact email is required!`,
+                    message: `${counterLabel} contact email is required!`,
                   },
                   {
                     pattern: emailRegex,
-                    message: `Enter valid ${modifyCresetUserType(userAlias, 'seller')} contact email!`,
+                    message: `Enter valid ${counterLabel} contact email!`,
                   },
                   () => ({
                     validator(_, value) {
+                      
                       if (!(value === Email)) {
                         return Promise.resolve();
                       }
                       return Promise.reject(
-                        new Error(`${modifyCresetUserType(userAlias, 'Buyer')} and ${modifyCresetUserType(userAlias, 'seller')} email cannot be same!`)
+                        new Error(`first party and second party email cannot be same!`)
                       );
                     },
                   }),
                 ]}
               >
                 <Input
-                  placeholder={`Enter ${modifyCresetUserType(userAlias, 'seller')}'s contact email`}
+                  placeholder={`Enter ${counterLabel}'s contact email`}
                   onInput={(e: any) => {
                     setdidsubmit(1);
                     e.target.value = e.target.value.toLowerCase();
@@ -954,20 +977,20 @@ const counterPartyOptions = firstParty === USER_TYPE_TEXT.TENENT
               )}
             </Col>
             <Col span={Width > 992 ? 8 : 24}>
-              <p className="seller-text-category">{modifyCresetUserType(userAlias, 'Seller')}&apos;s name</p>
+              <p className="seller-text-category">{counterLabel}&apos;s name</p>
               <Form.Item
                 name="sellerContactName"
                 className="inputField w-100 error-input"
                 rules={[
                   {
                     required: !isDraft,
-                    message: `${modifyCresetUserType(userAlias, 'Seller')} name is required!`,
+                    message: `${counterLabel} name is required!`,
                   },
                 ]}
               >
                 <Input
                   disabled={userExists}
-                  placeholder={`Enter ${modifyCresetUserType(userAlias, 'seller')} name`}
+                  placeholder={`Enter ${counterLabel} name`}
                   onChange={threeFunction}
                   maxLength={45}
                 />
@@ -1049,19 +1072,19 @@ const counterPartyOptions = firstParty === USER_TYPE_TEXT.TENENT
             </Col> */}
             {showCompany ? (
               <Col span={Width > 992 ? 8 : 24}>
-                <p className="enter-text-category">{modifyCresetUserType(userAlias, 'Seller')}’s company name</p>
+                <p className="enter-text-category">{counterLabel}’s company name</p>
                 <Form.Item
                   name="sellerCompanyName"
                   className="inputField w-100 error-input"
                   rules={[
                     {
                       required: !isDraft,
-                      message: `${modifyCresetUserType(userAlias, 'Seller')} company name is required!`,
+                      message: `${counterLabel} company name is required!`,
                     },
                   ]}
                 >
                   <Input
-                    placeholder={`Enter ${modifyCresetUserType(userAlias, 'seller')} company name`}
+                    placeholder={`Enter ${counterLabel} company name`}
                     onInput={() => {
                       setdidsubmit(1);
                     }}
@@ -1073,18 +1096,18 @@ const counterPartyOptions = firstParty === USER_TYPE_TEXT.TENENT
         ) : formValues?.userType === USER_TYPE_TEXT.SELLER ? (
           <>
             <Col span={Width > 992 ? 8 : 24}>
-              <p className="enter-text-category">{modifyCresetUserType(userAlias, 'Buyer')}’s contact email</p>
+              <p className="enter-text-category">{counterLabel}’s contact email</p>
               <Form.Item
                 name="buyerContactEmail"
                 className={`inputField w-100 error-input ${sellerCountryError?.status ? 'error-border' : ''}`}
                 rules={[
                   {
                     required: !isDraft,
-                    message: `${modifyCresetUserType(userAlias, 'Buyer')} contact email is required!`,
+                    message: `${counterLabel} contact email is required!`,
                   },
                   {
                     pattern: emailRegex,
-                    message: `Enter valid ${modifyCresetUserType(userAlias, 'buyer')} contact email!`,
+                    message: `Enter valid ${counterLabel} contact email!`,
                   },
                   () => ({
                     validator(_, value) {
@@ -1092,14 +1115,14 @@ const counterPartyOptions = firstParty === USER_TYPE_TEXT.TENENT
                         return Promise.resolve();
                       }
                       return Promise.reject(
-                        new Error(`${modifyCresetUserType(userAlias, 'Buyer')} and ${modifyCresetUserType(userAlias, 'seller')} email cannot be same!`)
+                        new Error(`First party and second party email cannot be same!`)
                       );
                     },
                   }),
                 ]}
               >
                 <Input
-                  placeholder={`Enter ${modifyCresetUserType(userAlias, 'buyer')} contact email`}
+                  placeholder={`Enter ${counterLabel} contact email`}
                   onInput={(e: any) => {
                     setdidsubmit(1);
                     e.target.value = e.target.value.toLowerCase();
@@ -1138,20 +1161,20 @@ const counterPartyOptions = firstParty === USER_TYPE_TEXT.TENENT
               )}
             </Col>
             <Col span={Width > 992 ? 8 : 24}>
-              <p className="enter-text-category">{modifyCresetUserType(userAlias, 'Buyer')}&apos;s name</p>
+              <p className="enter-text-category">{counterLabel}&apos;s name</p>
               <Form.Item
                 name="buyerContactName"
                 className="inputField w-100 error-input"
                 rules={[
                   {
                     required: !isDraft,
-                    message: `${modifyCresetUserType(userAlias, 'Buyer')} name is required!`,
+                    message: `${counterLabel} name is required!`,
                   },
                 ]}
               >
                 <Input
                   disabled={userExists}
-                  placeholder={`Enter ${modifyCresetUserType(userAlias, 'buyer')} name`}
+                  placeholder={`Enter ${counterLabel} name`}
                   onChange={twoFunction}
                   maxLength={45}
                 />
@@ -1203,19 +1226,19 @@ const counterPartyOptions = firstParty === USER_TYPE_TEXT.TENENT
             </Col>
             {showCompany ? (
               <Col span={Width > 992 ? 8 : 24}>
-                <p className="enter-text-category">{modifyCresetUserType(userAlias, 'Buyer')}&apos;s company name</p>
+                <p className="enter-text-category">{counterLabel}&apos;s company name</p>
                 <Form.Item
                   name="buyerCompanyName"
                   className="inputField w-100 error-input"
                   rules={[
                     {
                       required: !isDraft,
-                      message: `${modifyCresetUserType(userAlias, 'Buyer')} company name is required!`,
+                      message: `${counterLabel} company name is required!`,
                     },
                   ]}
                 >
                   <Input
-                    placeholder={`Enter ${modifyCresetUserType(userAlias, 'buyer')} company name`}
+                    placeholder={`Enter ${counterLabel} company name`}
                     onInput={() => {
                       setdidsubmit(1);
                     }}
