@@ -7,6 +7,7 @@ import SuccessTxn from "../../assets/img/TransactionSuccess.svg";
 import { SecondaryOutLineButton } from "../ui-elements/ButtonRepo";
 import copy from "clipboard-copy";
 import DefaultLayout from "../Common/DefaultLayout";
+import { toTitleCase } from "../Common/Constants";
 
 const EscrowSuccess = () => {
   const [Width, setWidth] = useState(document?.body?.clientWidth);
@@ -17,7 +18,12 @@ const EscrowSuccess = () => {
   const [isCopied, setIsCopied] = useState(false);
   const [pageloading, setPageLoading] = useState(true);
   const params = useLocation();
+  
   const url = params?.state?.url;
+  const from = params?.state?.from;
+  const to = params?.state?.to;
+  
+  
   // const contractId = params?.state?.contractId;
   const handleCopy = () => {
     copy(url);
@@ -79,7 +85,7 @@ const EscrowSuccess = () => {
               <Image src={SuccessTxn} preview={false} className="mt-5" />
 
               <div className="titleText mb-4 mt-5">
-                Buyer - Seller Escrow Transaction
+                {toTitleCase(from)} - {toTitleCase(to)}  Escrow Transaction
               </div>
               <div className="stepDetails_large fw-400 mx-15">
                 Your initiated escrow transaction has been shared with your

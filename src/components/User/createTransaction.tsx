@@ -251,9 +251,7 @@ const CreateTransaction = (): JSX.Element => {
         if (requestBody?.contractStartedBy !== "ESCROW_ADVISOR") {
           // const buyerEmail = requestBody.buyerContactEmail || userData?.email;
           // const sellerEmail = requestBody.sellerContactEmail;
-          const buyerCountry = requestBody.buyerCountry || userData?.country;
-          const sellerCountry = requestBody.sellerCountry;
-
+          
           // // Get nationality info based on KYC
           // const buyerKycData = await getNationalityWithKyc(buyerEmail, buyerCountry);
           // const sellerKycData = await getNationalityWithKyc(sellerEmail, sellerCountry);
@@ -267,13 +265,16 @@ const CreateTransaction = (): JSX.Element => {
               requestBody?.contractStartedBy === "BUYER"
                 ? requestBody?.sellerContactEmail
                 : requestBody?.buyerContactEmail,
-            countryAlias: sellerCountry,
+
+            countryAlias: requestBody?.contractStartedBy === "BUYER"
+                ? requestBody?.sellerCountry
+                : requestBody?.buyerCountry,
             // ...getNationalityInfo(sellerCountry),
           });
           setBuyerDetails({
             name: userData?.name,
             email: userData?.email,
-            countryAlias: buyerCountry,
+            countryAlias: userData?.country,
             // ...getNationalityInfo(buyerCountry),
           });
 
@@ -460,6 +461,8 @@ const CreateTransaction = (): JSX.Element => {
         url: url,
         contractId: contractId,
         userType: userType,
+        from: formValues.subContractParty,
+        to: formValues.subContractCounterParty
       },
     });
 
@@ -1133,11 +1136,7 @@ const CreateTransaction = (): JSX.Element => {
                                     }}
                                   >
 
-                                    Send to {""}
-                                    {formValues?.userType === USER_TYPE_TEXT.BUYER
-                                      ? hasAdvisor ? "Seller and Advisor" : "Seller"
-                                      : hasAdvisor ? "Buyer and Advisor" : "Buyer"
-                                    }
+                                    Send and Submit
                                   </Button>
                                   </>
                                 )}
@@ -1238,9 +1237,7 @@ const CreateTransaction = (): JSX.Element => {
             onClick={handleSubmit}
             disabled={isSubmitting}
           >
-            {buttonStatus === "DRAFT" ? "Save as draft" : userType != "ESCROW_ADVISOR" ? `Send to ${formValues?.userType === USER_TYPE_TEXT.BUYER
-              ? hasAdvisor ? "Seller and Advisor" : "Seller"
-              : hasAdvisor ? "Buyer and Advisor" : "Buyer"}` : "Invite User"
+            {buttonStatus === "DRAFT" ? "Save as draft" : userType != "ESCROW_ADVISOR" ? 'Send and Submit' : "Invite User"
             }
           </Button></span>
           <span className="edit-btn mt-3">

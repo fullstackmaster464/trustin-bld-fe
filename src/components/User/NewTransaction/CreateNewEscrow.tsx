@@ -184,7 +184,6 @@ const CreateNewEscrow = (props: object|any):any => {
     setWidth(document.body.clientWidth);
   }
    
-  
     const userFromUAE = useMemo(() => {
       return ( partyCountry === DEFAULT_COUNTRY || partyCountry === DEFAULT_COUNTRY_NAME || partyCountry === DEFAULT_COUNTRY_UAE );
     }, [partyCountry]);
@@ -1558,7 +1557,7 @@ const handleBuyerCountChange = (count: number) => {
               onChange={(value) => {
                 const selectedRole = value == USER_TYPE_TEXT.TENENT ? USER_TYPE_TEXT.BUYER : USER_TYPE_TEXT.SELLER;
                 form.setFieldsValue({ contractStartedBy: selectedRole });
-                setFormValues((prev: any) => ({ ...prev, contractStartedBy: selectedRole , subContractParty : value }));
+                setFormValues((prev: any) => ({ ...prev, contractStartedBy: selectedRole , userType : selectedRole, subContractParty : value }));
                 onUserTypeChange(selectedRole);
               }}
               showSearch
@@ -2127,12 +2126,12 @@ const handleBuyerCountChange = (count: number) => {
         </span>
         <span className="stepDetails_medium_sub">
           {" "}
-          (Fees will be split between {modifyCresetUserType(userAlias,'buyer')} & {modifyCresetUserType(userAlias,'seller')})
+          Fees will be split between first-party & second-party
         </span>
         <Tooltip
           title={
             <span className="response-tooltip">
-              Choose whether the transaction fees should be divided between the {modifyCresetUserType(userAlias,'buyer')} and {modifyCresetUserType(userAlias,'seller')}.
+              Choose whether the transaction fees should be divided between the first-party and second-party.
             </span>
           }
           overlayClassName='custom-tooltip info-icon'
@@ -2154,8 +2153,9 @@ const handleBuyerCountChange = (count: number) => {
           <>
           <Col span={Width < 992 ? 24 : 8}>
               <p className="enter-text-category">
-                {modifyCresetUserType(userAlias,formValues?.userType == "BUYER" ? "Buyer" : formValues?.userType == "ESCROW_ADVISOR" ? "Buyer" : "Seller")}&apos;s
-                percentage
+                {/* {modifyCresetUserType(userAlias,formValues?.userType == "BUYER" ? "Buyer" : formValues?.userType == "ESCROW_ADVISOR" ? "Buyer" : "Seller")} */}
+                First party
+                &apos;s percentage
               </p>
               <Form.Item
                 name={`${modifyCresetUserType(userAlias,(formValues.userType)  == 'ESCROW_ADVISOR' ? 'buyer' : (formValues.userType).toLowerCase())}Percent`}
@@ -2197,15 +2197,17 @@ const handleBuyerCountChange = (count: number) => {
             </Col>
             <Col span={Width < 992 ? 24 : 8} className={Width < 992 ? "px-0":"px-3"}>
               <p className="enter-text-category">
-                {modifyCresetUserType(userAlias,formValues?.userType === "SELLER" ? "Buyer" : "Seller")}&apos;s
-                percentage 
+                {/* {modifyCresetUserType(userAlias,formValues?.userType === "SELLER" ? "Buyer" : "Seller")} */}
+                Second party
+                &apos;s percentage 
               </p>
               <Form.Item
                 name={`otherPercent`}
                 className="inputField w-100 error-input"
               >
                 <Input
-                  placeholder={`Will display as per ${modifyCresetUserType(userAlias,formValues?.userType == "BUYER" ? "buyer" : formValues?.userType == "ESCROW_ADVISOR" ? "buyer" : "seller")}'s %`}
+                  // placeholder={`Will display as per ${modifyCresetUserType(userAlias,formValues?.userType == "BUYER" ? "buyer" : formValues?.userType == "ESCROW_ADVISOR" ? "buyer" : "seller")}'s %`}
+                  placeholder={`Will display as per first party's %`}
                   disabled
                   suffix={"%"}
                 />
@@ -2326,6 +2328,7 @@ const handleBuyerCountChange = (count: number) => {
           // )
         }
         </Row>
+        
         {formValues.userType === "SELLER" ? <>
           <hr className="lightgrayHr mb-5 mt-4" />
           <PayoutAccount 
@@ -2540,119 +2543,113 @@ const handleBuyerCountChange = (count: number) => {
       {buyerCountOpposite > 1 &&
         <hr className="lightgrayHr mt-0" />
       }
-      <Row gutter={16}> 
-        <Col> 
-          <div>
-            <span className="stepDetails fw-400 mb-2 mt-3 textOverflow" style={{whiteSpace: "wrap"}}>
-              {
-                selectedUserType === USER_TYPE_TEXT.BUYER
-                  ? "Do you want to enable multi-seller?"
-                  : "Do you want to enable multi-buyer?"
-              }  
-            </span>
-          </div>
+  
+      {
+      formValues?.subContractCounterParty ?
+        <>
+          <Row gutter={16}> 
+            <Col> 
+              <div>
+                <span className="stepDetails fw-400 mb-2 mt-3 textOverflow" style={{whiteSpace: "wrap"}}>
+                  {formValues?.subContractCounterParty
+                  ? `Do you want to enable multi-${formValues.subContractCounterParty.toLowerCase()}?`
+                  : ""}
+                </span>
+              </div>
 
-          <div>
-            <Form.Item className="mb-3 radioInput" name="multipartyOptionOpposite" initialValue="NO">
-              <Radio.Group
-                onChange={(e) => {
-                  const value = e.target.value;
-                  setEnableMultiBuyerOpposite(value === "YES");
+              <div>
+                <Form.Item className="mb-3 radioInput" name="multipartyOptionOpposite" initialValue="NO">
+                  <Radio.Group
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setEnableMultiBuyerOpposite(value === "YES");
 
-                    if (value === "NO") {
-                      setBuyerCountOpposite(null);
-                      setBuyersOpposite([]);
-                      form.setFieldValue("multiCountOpposite", null);
-                    }
-                }}
-              >
-                <Radio value="YES">Yes</Radio>
-                <Radio value="NO">No</Radio>
-              </Radio.Group>
-            </Form.Item>
-          </div>
-        </Col>
+                        if (value === "NO") {
+                          setBuyerCountOpposite(null);
+                          setBuyersOpposite([]);
+                          form.setFieldValue("multiCountOpposite", null);
+                        }
+                    }}
+                  >
+                    <Radio value="YES">Yes</Radio>
+                    <Radio value="NO">No</Radio>
+                  </Radio.Group>
+                </Form.Item>
+              </div>
+            </Col>
 
-        {enableMultiBuyerOpposite && (
-          <>
-          <Col span={Width < 992 ? 24 : 8}>
-            <div>
-              <span className="stepDetails fw-400 mb-2 mt-3 textOverflow" style={{whiteSpace: "wrap"}}>
-                {
-                  selectedUserType === USER_TYPE_TEXT.BUYER
-                    ? "Select number of sellers"
-                    : "Select number of buyers"
-                }
-              </span>
-            </div>
+            {enableMultiBuyerOpposite && (
+              <>
+              <Col span={Width < 992 ? 24 : 8}>
+                <div>
+                  <span className="stepDetails fw-400 mb-2 mt-3 textOverflow" style={{whiteSpace: "wrap"}}>
+                    {`Select number of ${formValues.subContractCounterParty.toLowerCase()}`}
+                  </span>
+                </div>
 
-            <div>
-              <Form.Item 
-                name="multiCountOpposite"
-                className="w-100 inputField"
-                rules={[
-                  {
-                    required: !isDraft,
-                    message: `Please select number of ${selectedUserType === USER_TYPE_TEXT.BUYER ? "sellers" : "buyers"}`,
-                  }
-                ]}
-              >
-                <Select
-                  placeholder={
-                    selectedUserType === USER_TYPE_TEXT.BUYER
-                      ? "Select number of Sellers"
-                      : "Select number of Buyers"
-                  }
-                  value={buyerCountOpposite || undefined}
-                  onChange={handleBuyerCountOppositeChange}
-                  options={[2, 3, 4, 5].map(n => ({ label: n, value: n }))}
-                />
-              </Form.Item>
-            </div>
-          </Col>
-          <Col span={Width < 992 ? 24 : 8}>
-            <div>
-              <span className="stepDetails fw-400 mb-2 mt-3 textOverflow" style={{ whiteSpace: "wrap" }}>
-                {selectedUserType === USER_TYPE_TEXT.BUYER
-                  ? "Select main seller"
-                  : "Select main buyer"}
-              </span>
-            </div>
+                <div>
+                  <Form.Item 
+                    name="multiCountOpposite"
+                    className="w-100 inputField"
+                    rules={[
+                      {
+                        required: !isDraft,
+                        message: `Please select number of ${formValues.subContractCounterParty.toLowerCase()}`,
+                      }
+                    ]}
+                  >
+                    <Select
+                      placeholder={`Select number of ${formValues.subContractCounterParty.toLowerCase()}`}
+                      value={buyerCountOpposite || undefined}
+                      onChange={handleBuyerCountOppositeChange}
+                      options={[2, 3, 4, 5].map(n => ({ label: n, value: n }))}
+                    />
+                  </Form.Item>
+                </div>
+              </Col>
+              <Col span={Width < 992 ? 24 : 8}>
+                <div>
+                  <span className="stepDetails fw-400 mb-2 mt-3 textOverflow" style={{ whiteSpace: "wrap" }}>
+                    {`Select main ${formValues.subContractCounterParty.toLowerCase()}`}
+                  </span>
+                </div>
 
-            <div>
-              <Form.Item className="w-100 inputField">
-                <Select
-                  placeholder={`Select main ${selectedUserType === USER_TYPE_TEXT.BUYER ? "seller" : "buyer"}`}
-                  value={buyersOpposite.find((b: { isMain: any; }) => b.isMain)?.id || undefined}
-                  onChange={(id) => {
-                    markAsMainPartyOpposite(id);
-                  }}
-                  options={buyersOpposite.map((p: { id: any; }, index: number) => ({
-                    label: `${selectedUserType === USER_TYPE_TEXT.BUYER ? "Seller SANTOSH" : "Buyer"} ${index + 1}`,
-                    value: p.id,
-                  }))}
-                />
-              </Form.Item>
-            </div>
-          </Col>
-          </>
-        )}
-      </Row>
-      {/* Opposite Party Form */}
-      <MultiPartyForm
-        parties={buyersOpposite}
-        allOtherParties={buyers}
-        width={Width}
-        form={form}
-        isDraft={isDraft}
-        updatePartyField={updateBuyerFieldOpposite} 
-        markAsMainParty={markAsMainPartyOpposite} 
-        validateContactNumber={validateContactNumber}
-        searchUserByEmail={searchUserByEmailOpposite} 
-        getLabel={getLabel}
-        countryList={countryList}
-        mainPartyRole={formValues?.subContractParty || selectedUserType}
-      />
+                <div>
+                  <Form.Item className="w-100 inputField">
+                    <Select
+                      placeholder={`Select main ${selectedUserType === USER_TYPE_TEXT.BUYER ? "seller" : "buyer"}`}
+                      value={buyersOpposite.find((b: { isMain: any; }) => b.isMain)?.id || undefined}
+                      onChange={(id) => {
+                        markAsMainPartyOpposite(id);
+                      }}
+                      options={buyersOpposite.map((p: { id: any; }, index: number) => ({
+                        label: `Select ${formValues.subContractCounterParty.toLowerCase()} ${index + 1}`,
+                        value: p.id,
+                      }))}
+                    />
+                  </Form.Item>
+                </div>
+              </Col>
+              </>
+            )}
+          </Row>
+          {/* Opposite Party Form */}
+          <MultiPartyForm
+            parties={buyersOpposite}
+            allOtherParties={buyers}
+            width={Width}
+            form={form}
+            isDraft={isDraft}
+            updatePartyField={updateBuyerFieldOpposite} 
+            markAsMainParty={markAsMainPartyOpposite} 
+            validateContactNumber={validateContactNumber}
+            searchUserByEmail={searchUserByEmailOpposite} 
+            getLabel={getLabel}
+            countryList={countryList}
+            mainPartyRole={formValues?.subContractCounterParty}
+          />
+        </>
+       : null }
     </div> 
    </>
   );

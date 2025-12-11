@@ -47,6 +47,8 @@ const TransactionPreview = (props: any): any => {
   const setWidthVal = () => {
     setWidth(document.body.clientWidth);
   };
+ 
+
   const getDynamicLabel = () => {
     if (contractDetail?.dynamicInputFields?.length > 0) {
       const data: any = [];
@@ -101,6 +103,13 @@ const TransactionPreview = (props: any): any => {
       ? ` completed on ${dayjs(releaseDate).format("DD-MM-YYYY")}`
       : ` yet to be released on ${dayjs(releaseDate).format("DD-MM-YYYY")}`;
   };
+
+  
+ 
+
+  const getLabel = () => {
+     return contractDetail.contractStartedBy == USER_TYPE_TEXT.BUYER ?  contractDetail.subContractCounterParty : contractDetail.subContractParty;
+  }
 
   useEffect(() => { 
     if (payoutAccount?.currency != null && payoutAccount?.accountCurrency != null && payoutAccount?.currency !== payoutAccount?.accountCurrency) {
@@ -171,7 +180,7 @@ const TransactionPreview = (props: any): any => {
                   className="columnData"
                 >
                   <div className="buyerBox capitalize">
-                    From {contractDetail?.contractStartedBy !== "ESCROW_ADVISOR" ? modifyCresetUserType(userAlias, toTitleCase(contractDetail?.contractStartedBy.toLowerCase())) : modifyCresetUserType(userAlias, "Buyer")}
+                    From {contractDetail?.contractStartedBy !== "ESCROW_ADVISOR" ? toTitleCase(contractDetail?.subContractParty) : modifyCresetUserType(userAlias, "Buyer")}
                   </div>
                   <div className="d-flex my-3">
                     <Image src={WhiteUserFull} alt="box" preview={false} />
@@ -255,7 +264,7 @@ const TransactionPreview = (props: any): any => {
                   className="columnData"
                 >
                   <div className="buyerBox">
-                    To {contractDetail?.contractStartedBy !== "ESCROW_ADVISOR" ? contractDetail?.contractStartedBy === "BUYER" ? modifyCresetUserType(userAlias, "Seller") : modifyCresetUserType(userAlias, "Buyer") : modifyCresetUserType(userAlias, "Seller")}
+                    To {contractDetail?.contractStartedBy !== "ESCROW_ADVISOR" ? toTitleCase(contractDetail?.subContractCounterParty) :  "" }
                   </div>
                   <div className="d-flex my-3">
                     <Image src={WhiteUserFull} alt="box" preview={false} />
@@ -375,8 +384,10 @@ const TransactionPreview = (props: any): any => {
                                         <img src={WhiteUserFull} alt="box" />
                                         <p className="mt-2 mb-0">
                                           {
-                                            contractDetail?.contractStartedBy === "BUYER" ?  "Co-Buyer" : "Co-Seller"
+                                            ("Co" + contractDetail?.contractStartedBy === "BUYER" ?  toTitleCase(contractDetail?.subContractParty) : toTitleCase(contractDetail?.subContractCounterParty))
                                           }
+                                          
+                                          
                                            </p>
                                       </div>
                                       <div className="flex-fill mx-md-3">
@@ -430,10 +441,9 @@ const TransactionPreview = (props: any): any => {
                                   <div className="bluecard-smallbox">
                                     <img src={WhiteUserFull} alt="box" />
                                     <p className="mt-2 mb-0">
-                                      {
-                                        contractDetail?.contractStartedBy === "BUYER" ?  "Co-Seller" : "Co-Buyer"
-                                      }
-                                      
+                                        {
+                                          ("Co" + contractDetail?.contractStartedBy === "BUYER" ?  toTitleCase(contractDetail?.subContractCounterParty) : toTitleCase(contractDetail?.subContractParty))
+                                        }
                                       </p>
                                   </div>
                                   <div className="flex-fill mx-md-3">
@@ -674,7 +684,7 @@ const TransactionPreview = (props: any): any => {
                 ) : null}
                 <tr>
                   <td className="p-2 ">
-                    <div className="subText_small">TrustIn platform fees to be paid by {modifyCresetUserType(userAlias, 'buyer')} ({isNaN(contractDetail.buyerPercent) ? "0.00" : contractDetail.buyerPercent}%)</div>
+                    <div className="subText_small">TrustIn platform fees to be paid by {toTitleCase(USER_TYPE_TEXT.TENENT)} ({isNaN(contractDetail.buyerPercent) ? "0.00" : contractDetail.buyerPercent}%)</div>
                   </td>
                   <td className="p-2 text-end ">
                     <div className="subText_small">
@@ -684,7 +694,7 @@ const TransactionPreview = (props: any): any => {
                 </tr>
                 <tr>
                   <td className="p-2 ">
-                    <div className="subText_small">TrustIn platform fees to be paid by {modifyCresetUserType(userAlias, 'seller')} ({isNaN(contractDetail.sellerPercent) ? "0.00" : contractDetail.sellerPercent}%)</div>
+                    <div className="subText_small">TrustIn platform fees to be paid by {toTitleCase(getLabel())} ({isNaN(contractDetail.sellerPercent) ? "0.00" : contractDetail.sellerPercent}%)</div>
                   </td>
                   <td className="p-2 text-end ">
                     <div className="subText_small">
@@ -698,7 +708,7 @@ const TransactionPreview = (props: any): any => {
                 </tr>
                 <tr>
                   <td className="p-2 ">
-                    <div className="subText_small">Amount to be paid by {modifyCresetUserType(userAlias, 'buyer')}</div>
+                    <div className="subText_small">Amount to be paid by {toTitleCase(USER_TYPE_TEXT.TENENT)}</div>
                   </td>
                   <td className="p-2 text-end ">
                     <div className="subText_small">
@@ -708,7 +718,7 @@ const TransactionPreview = (props: any): any => {
                 </tr>
                 <tr>
                   <td className="p-2 ">
-                    <div className="subText_small">Amount to be received by {modifyCresetUserType(userAlias, 'seller')}</div>
+                    <div className="subText_small">Amount to be received by {toTitleCase(getLabel())}</div>
                   </td>
                   <td className="p-2 text-end ">
                     <div className="subText_small">
@@ -878,7 +888,7 @@ const TransactionPreview = (props: any): any => {
           {userType === "ESCROW_ADVISOR" ? "" : signature ? 
               <Card className="grayCard p-3 pt-0">
                 <div className="stepDetails my-3">
-                  {contractDetail?.contractStartedBy ? modifyCresetUserType(userAlias, toTitleCase(contractDetail?.contractStartedBy.toLowerCase())) + " sign" : `${modifyCresetUserType(userAlias, 'seller')} sign`} </div>
+                  {toTitleCase(contractDetail?.subContractParty.toLowerCase()) + " sign"} </div>
                 {/* <Image src={signature} alt="from Sign" height={100} width={150} /> */}
                 {signature && typeof signature === 'string' && signature.includes(".pdf") ? (
                   <div className="signature-image m admin-panel-pdf-preview">

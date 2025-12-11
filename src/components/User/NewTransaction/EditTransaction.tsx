@@ -124,7 +124,7 @@ const EditTransaction = ():any => {
   const userData = local ? JSON.parse(local) : null;
   const name = userData ? userData?.name : "";
   const userAlias = userData ? userData?.userAlias : "";
-  const userType = userData ? userData?.userType : "";
+  
   const entityType = userData ? userData?.entityType : ""; 
   const [buyerAmount, setBuyerAmount] = useState({});
   const [sellerAmount, setSellerAmount] = useState<number>(0);
@@ -424,6 +424,8 @@ const EditTransaction = ():any => {
         url: url,
         contractId: contractId,
         userType: userType,
+        from: formValues.subContractParty,
+        to: formValues.subContractCounterParty
       },
     });
   };
@@ -1212,8 +1214,7 @@ const EditTransaction = ():any => {
                               form.setFieldsValue({ required: true });
                             }}
                           >
-                            Send to{" "}
-                            {formValues?.userType === USER_TYPE_TEXT.BUYER ? hasAdvisor ? `${modifyCresetUserType(userAlias,'Seller')} and Advisor` : `${modifyCresetUserType(userAlias,'Seller')}` : hasAdvisor ? `${modifyCresetUserType(userAlias,'Buyer')} and Advisor` : `${modifyCresetUserType(userAlias,'Buyer')}` }
+                            Send to Submit
                           </Button>
                          )}
                          { formValues?.userType === USER_TYPE_TEXT.ESCROW_ADVISOR && (
@@ -1288,10 +1289,7 @@ const EditTransaction = ():any => {
             loading={loading}
             onClick={() => {onFinish(form.getFieldsValue()) }}
           >
-          {buttonStatus === "DRAFT" ? "Save as draft" : userType != "ESCROW_ADVISOR" ? `Send to ${formValues?.userType === USER_TYPE_TEXT.BUYER
-              ? hasAdvisor ? `${modifyCresetUserType(userAlias,'Seller')} and Advisor` : `${modifyCresetUserType(userAlias,'Seller')}`
-              : hasAdvisor ? `${modifyCresetUserType(userAlias,'Buyer')} and Advisor` : `${modifyCresetUserType(userAlias,'Buyer')}`}` : "Invite User"
-            }
+          {buttonStatus === "DRAFT" ? "Save as draft" : "Save and Submit"}
           </Button>
           <SecondaryOutLineButton
             className={Width > 500 ? "w-100 mx-3" :"editBtn w-100 mx-0 my-3"}

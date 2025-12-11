@@ -895,6 +895,14 @@ const counterPartyOptions = firstParty === USER_TYPE_TEXT.TENENT
               placeholder="Select counter party"
               allowClear
               showSearch
+              onChange={
+                (value) => {
+                  setFormValues((prevState:any) => ({
+                      ...prevState,
+                      subContractCounterParty: value
+                    })); 
+                }
+              }
               options={counterPartyOptions}
               disabled={!firstParty}
             />

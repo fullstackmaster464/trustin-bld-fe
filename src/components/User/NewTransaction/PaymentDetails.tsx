@@ -1,7 +1,7 @@
 import { Card, Col, Image, Popover, Row, message } from "antd";
 import { useEffect, useRef, useState } from "react";
 import GrayInfo from '../../../assets/img/info_light.svg'
-import { PLATFORM_CHARGE_APPLIED_ON, TRANSACTION_TYPE, getLocalStorage, modifyCresetUserType } from "../../Common/Constants";
+import { PLATFORM_CHARGE_APPLIED_ON, TRANSACTION_TYPE, USER_TYPE_TEXT, getLocalStorage, toTitleCase } from "../../Common/Constants";
 import { getUserPlatformFees } from "../../../services/admin";
 import BankIcon from '../../../assets/img/bankIcon.svg'
 import { CalculateTransactionFee, calculateUserPlatformFee } from "../../Common/InvoiceCalculations";
@@ -11,7 +11,7 @@ import { getForexExchangeRate } from "../../../services/user";
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 const PaymentDetails = (props: any):any => {
-  const { formValues, setPlatformCharge, taxDetails,  setTaxDetails, setSellerAmount, setBuyerAmount,EscrowAdvisorFee, setInvoiceCalculations, hasAdvisor, buyerCommissionPercent, buyerPercent, advisorFeeType , hideSellerAmount } = props;
+  const { formValues, taxDetails,  setTaxDetails, setSellerAmount, setBuyerAmount,EscrowAdvisorFee, setInvoiceCalculations, hasAdvisor, buyerCommissionPercent, buyerPercent, advisorFeeType , hideSellerAmount } = props;
   // const [data, setData] = useState({
   //   selfCurrency: "",
   //   otherCurrency: "",
@@ -19,7 +19,12 @@ const PaymentDetails = (props: any):any => {
   //   conversionRate: "",
   // });
   // const antIcon = <LoadingOutlined style={{ fontSize: 30 }} spin />;
-console.warn(setPlatformCharge);
+   
+
+                              
+  const getLabel = () => {
+   return formValues.userType == USER_TYPE_TEXT.BUYER ?  formValues.subContractCounterParty : formValues.subContractParty;
+  }
 
   const [showData, setShowData] = useState<any>({
     platformPercent: "",
@@ -218,6 +223,7 @@ console.warn(setPlatformCharge);
   //   }
   // };
 
+ 
   return formValues?.invoiceAmount ? (
     <>
       <div className="position-relative">
@@ -291,9 +297,10 @@ console.warn(setPlatformCharge);
                     </div>
                   </td>
                 </tr>
+                
                 <tr>
                   <td className="p-2 ">
-                    <div className="subText_small">Escrow advisor fee to be paid by {modifyCresetUserType(userAlias,'seller')} ({SellerCommissionPercent}%)</div>
+                    <div className="subText_small">Escrow advisor fee to be paid by {toTitleCase(USER_TYPE_TEXT.TENENT)} ({SellerCommissionPercent}%)</div>
                   </td>
                   <td className="p-2 text-end ">
                     <div className="subText_small">
@@ -305,7 +312,7 @@ console.warn(setPlatformCharge);
                 ): null}
                  <tr>
                   <td className="p-2 ">
-                    <div className="subText_small">Trustin platform fee to be paid by {modifyCresetUserType(userAlias,'buyer')} ({BuyerPercent}%)</div>
+                    <div className="subText_small">Trustin platform fee to be paid by {toTitleCase(USER_TYPE_TEXT.TENENT)} ({BuyerPercent}%)</div>
                   </td>
                   <td className="p-2 text-end ">
                     <div className="subText_small">
@@ -315,7 +322,7 @@ console.warn(setPlatformCharge);
                 </tr>
                 <tr>
                   <td className="p-2 ">
-                    <div className="subText_small">Trustin platform fee to be paid by {modifyCresetUserType(userAlias,'seller')} ({SellerPercent}%)</div>
+                    <div className="subText_small">Trustin platform fee to be paid by {toTitleCase(getLabel())} ({SellerPercent}%)</div>
                   </td>
                   <td className="p-2 text-end ">
                     <div className="subText_small">
@@ -329,7 +336,7 @@ console.warn(setPlatformCharge);
                 </tr>
                 <tr>
                   <td className="p-2 ">
-                    <div className="subText_small">Amount to be paid by  {modifyCresetUserType(userAlias,'buyer')}</div>
+                    <div className="subText_small">Amount to be paid by  {toTitleCase(USER_TYPE_TEXT.TENENT)}</div>
                   </td>
                   <td className="p-2 text-end ">
                     <div className="subText_small">
@@ -341,7 +348,7 @@ console.warn(setPlatformCharge);
                  hideSellerAmount ? null : 
                  <tr>
                   <td className="p-2 ">
-                    <div className="subText_small">Amount to be received by {modifyCresetUserType(userAlias,'seller')}</div>
+                    <div className="subText_small">Amount to be received by {toTitleCase(getLabel())}</div>
                   </td>
                   <td className="p-2 text-end ">
                     <div className="subText_small">
