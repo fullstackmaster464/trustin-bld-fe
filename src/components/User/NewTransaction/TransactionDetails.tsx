@@ -504,6 +504,8 @@ const counterPartyOptions = firstParty === USER_TYPE_TEXT.TENENT
       const userData = debounce(email, (email: any) => {
         getUserData(email)
           .then(async (res) => {
+
+            
             
             if (!res.data) {
               return;
@@ -513,8 +515,8 @@ const counterPartyOptions = firstParty === USER_TYPE_TEXT.TENENT
             if (type === 'advisor' && res.data?.userType !== 'ESCROW_ADVISOR') {
               message.error("Escrow advisor not found");
               return;
-            }
-            if (type !== 'advisor' && res.data?.userType !== 'USER') {//if user not general user then throw error
+            } 
+            if (type !== 'advisor' && !['USER','GUEST'].includes(res.data?.userType)) {//if user not general user then throw error
               message.error("User is invalid");
               form.setFieldsValue({
                 buyerContactEmail: null,
@@ -522,7 +524,7 @@ const counterPartyOptions = firstParty === USER_TYPE_TEXT.TENENT
               })
               return;
             }
-            if (res?.data?.userType === "USER") {
+            if (['USER','GUEST'].includes(res.data?.userType)) {
               setUserExists(true);
               setLocalStorage("otherPartyCountry", res.data?.countryAlias);
               setLocalStorage("counterUserAlias", res.data?.userAlias);
@@ -535,10 +537,7 @@ const counterPartyOptions = firstParty === USER_TYPE_TEXT.TENENT
             const isCreate = window.location.href.includes("create-escrow-transaction")
             if (isCreate || isEdit) {
               if (formValues?.userType === "BUYER") {
-                if (res?.data?.userType === "GUEST") {
-                  setUserExists(false);
-                  setAdvisorExists(false);
-                } else if (res?.data?.userType === "USER") {
+                 if (['USER','GUEST'].includes(res.data?.userType)) {
                   if (res?.data?.countryAlias && res.data.countryAlias !== form.getFieldValue(["sellerCountry"])) {
                     // const buyerCountry = UserData?.companyCountryIsoCode || UserData?.countryAlias;
                     const sellerCountry = res?.data?.companyCountryIsoCode || res?.data?.countryAlias;
@@ -603,10 +602,7 @@ const counterPartyOptions = firstParty === USER_TYPE_TEXT.TENENT
                   }
                 } 
               } else if (formValues?.userType === "SELLER") {
-                if (res?.data?.userType === "GUEST") {
-                  setUserExists(false);
-                  setAdvisorExists(false);
-                } else if (res?.data?.userType === "USER") {
+                if (['USER','GUEST'].includes(res.data?.userType)) {
 
 
                   if (res?.data?.countryAlias && res.data.countryAlias !== form.getFieldValue(["buyerCountry"])) {
