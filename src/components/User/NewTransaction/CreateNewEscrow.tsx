@@ -1701,7 +1701,7 @@ const handleBuyerCountChange = (count: number) => {
                     }}
                     options={buyers.map((p: { id: any; }, index: number) => ({
                       // label: `${selectedUserType === USER_TYPE_TEXT.BUYER ? "Buyer" : "Seller"} ${index + 1}`,
-                      label: `${formValues.subContractParty.toLowerCase()} ${index + 1}`,
+                       label: `${formValues.subContractParty.charAt(0).toUpperCase() + formValues.subContractParty.slice(1).toLowerCase()} ${index + 1}`,
                       
                       value: p.id,
                     }))}
@@ -2623,7 +2623,7 @@ const handleBuyerCountChange = (count: number) => {
                         markAsMainPartyOpposite(id);
                       }}
                       options={buyersOpposite.map((p: { id: any; }, index: number) => ({
-                        label: `Select ${formValues.subContractCounterParty.toLowerCase()} ${index + 1}`,
+                        label: `${formValues.subContractCounterParty.charAt(0).toUpperCase() + formValues.subContractCounterParty.slice(1).toLowerCase()} ${index + 1}`,
                         value: p.id,
                       }))}
                     />
