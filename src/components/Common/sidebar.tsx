@@ -51,8 +51,8 @@ import onlinePayments from "../../assets/img/onlinepaygray.svg";
 import onlinePaymentsFill from "../../assets/img/onlinepayfill.svg";
 import supportlist from "../../assets/img/supportlistgray.svg"
 import supportListFill from "../../assets/img/supportlistfill.svg"
-import Logo from "../../assets/img/bld-logo.jpg";
-import FormLogo from "../../assets/img/bld-logo.jpg";
+import Logo from "../../assets/img/bld-market-logo.jpg";
+import FormLogo from "../../assets/img/bld-market-logo.jpg";
 import Managercheque from "../../assets/img/bankcheck.svg";
 import Mangerchequegray from "../../assets/img/bankcheckfgray.svg";
 import { useState } from "react";
