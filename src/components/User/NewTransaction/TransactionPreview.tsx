@@ -384,11 +384,9 @@ const TransactionPreview = (props: any): any => {
                                         <img src={WhiteUserFull} alt="box" />
                                         <p className="mt-2 mb-0">
                                           {
-                                            ("Co" + contractDetail?.contractStartedBy === "BUYER" ?  toTitleCase(contractDetail?.subContractParty) : toTitleCase(contractDetail?.subContractCounterParty))
+                                            toTitleCase(contractDetail?.subContractParty)
                                           }
-                                          
-                                          
-                                           </p>
+                                          </p>
                                       </div>
                                       <div className="flex-fill mx-md-3">
                                         <div className="whiteTitle18 px-3 fs-5 text-break">
@@ -442,7 +440,7 @@ const TransactionPreview = (props: any): any => {
                                     <img src={WhiteUserFull} alt="box" />
                                     <p className="mt-2 mb-0">
                                         {
-                                          ("Co" + contractDetail?.contractStartedBy === "BUYER" ?  toTitleCase(contractDetail?.subContractCounterParty) : toTitleCase(contractDetail?.subContractParty))
+                                          toTitleCase(contractDetail?.subContractCounterParty)
                                         }
                                       </p>
                                   </div>

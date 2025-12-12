@@ -742,7 +742,7 @@ const onItemCategoryChange = async (itemCategoryAlias: any) => {
     const currencySymbol = selectedCurrency;//TEMP: static symbol
     // let currencySymbol = filter[0]?.currency?.symbol;
     setCurrencySymbol(currencySymbol);
-    // const currency = 'AED'//countryFilter[0]?.currency?.isoCode //TEMP: static currency
+    const currency = VALID_CURRENCY[0]  //countryFilter[0]?.currency?.isoCode //TEMP: static currency
     setCurrency(currency); 
     form.setFieldsValue({
       currency: currency

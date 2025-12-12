@@ -668,6 +668,7 @@ const CreateTransaction = (): JSX.Element => {
                 role: "BUYER",
                 userType: "USER",
                 isMainUser: item.isMain,
+                subRole: values.subContractParty, 
               }))
             }
           if(buyersOpposite.length){
@@ -680,6 +681,7 @@ const CreateTransaction = (): JSX.Element => {
                 role: "SELLER",
                 userType: "USER",
                 isMainUser: item.isMain,
+                subRole: values.subContractCounterParty, 
               }))
           }
         }else{
@@ -693,6 +695,7 @@ const CreateTransaction = (): JSX.Element => {
                 role: "SELLER",
                 userType: "USER",
                 isMainUser: item.isMain,
+                subRole: values.subContractParty, 
               }))
             }
           if(buyersOpposite.length){
@@ -705,6 +708,7 @@ const CreateTransaction = (): JSX.Element => {
                 role: "BUYER",
                 userType: "USER",
                 isMainUser: item.isMain,
+                subRole: values.subContractCounterParty, 
               }))
           }
         }
@@ -723,6 +727,7 @@ const CreateTransaction = (): JSX.Element => {
           message.error("Please add your remaining amount to Milestone!")
         }
         // console.log("requestBody==>",requestBody);
+         
          
         if (
           (leftAmount === 0 || !requestBody.isMilestone) &&

@@ -131,6 +131,9 @@ const PaymentDetails = (props: any):any => {
           minimumPlatformCharge: minimumPlatformFee ?? taxDetails?.minimumPlatformFee,
           entityType: entityType
         });
+
+        
+        
         setInvoiceCalculations(data);
         setShowData({
           ...showData,
