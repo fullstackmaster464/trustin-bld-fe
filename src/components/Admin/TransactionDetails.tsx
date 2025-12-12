@@ -780,6 +780,7 @@ const TransactionDetails = ():any => {
         setFromParty({
           userAlias: response?.data?.buyerAlias,
           userType: USER_TYPE_TEXT.BUYER,
+          subuserType: toTitleCase(response?.data?.subContractParty),
           name: response?.data?.buyerDetails.name ?? '',
           email: response?.data?.buyerDetails?.email ?? '',
           entityType: response?.data?.buyerDetails?.entityType || "INDIVIDUAL",
@@ -792,6 +793,7 @@ const TransactionDetails = ():any => {
         setToParty({
           userAlias: response?.data?.sellerAlias,
           userType: USER_TYPE_TEXT.SELLER,
+          subuserType: toTitleCase(response?.data?.subContractCounterParty),
           name: response?.data?.sellerDetails.name ?? '',
           email: response?.data?.sellerDetails?.email ?? '',
           entityType: response?.data?.sellerDetails?.entityType || "INDIVIDUAL",
@@ -804,6 +806,7 @@ const TransactionDetails = ():any => {
         setFromParty({
           userAlias: response?.data?.sellerAlias,
           userType: USER_TYPE_TEXT.SELLER,
+          subuserType: toTitleCase(response?.data?.subContractParty),
           name: response?.data?.sellerDetails.name ?? '',
           email: response?.data?.sellerDetails?.email ?? '',
           entityType: response?.data?.sellerDetails?.entityType || "INDIVIDUAL",
@@ -816,6 +819,7 @@ const TransactionDetails = ():any => {
         setToParty({
           userAlias: response?.data?.buyerAlias,
           userType: USER_TYPE_TEXT.BUYER,
+          subuserType: toTitleCase(response?.data?.subContractCounterParty),
           name: response?.data?.buyerDetails.name ?? '',
           email: response?.data?.buyerDetails?.email ?? '',
           entityType: response?.data?.buyerDetails?.entityType || "INDIVIDUAL",
@@ -1103,6 +1107,7 @@ const TransactionDetails = ():any => {
       if (response?.data?.buyerAlias === userAlias) {
         setFromParty({
           userType: "Buyer",
+          subuserType : toTitleCase(response?.data?.subContractParty),
           userAlias: response?.data?.buyerAlias,
           name: response?.data?.buyerDetails.name,
           email: response?.data?.buyerDetails?.email,
@@ -1112,6 +1117,7 @@ const TransactionDetails = ():any => {
         });
         setToParty({
           userType: "Seller",
+          subuserType: toTitleCase(response?.data?.subContractCounterParty),
           userAlias: response?.data?.sellerAlias,
           name: response?.data?.sellerDetails.name,
           email: response?.data?.sellerDetails?.email,
@@ -1122,6 +1128,7 @@ const TransactionDetails = ():any => {
       } else {         
         setFromParty({
           userType: "Seller",
+          subuserType: toTitleCase(response?.data?.subContractParty),
           userAlias: response?.data?.sellerAlias,
           name: response?.data?.sellerDetails.name,
           email: response?.data?.sellerDetails?.email,
@@ -1131,6 +1138,7 @@ const TransactionDetails = ():any => {
         });
         setToParty({
           userType: "Buyer",
+          subuserType: toTitleCase(response?.data?.subContractCounterParty),
           userAlias: response?.data?.buyerAlias,
           name: response?.data?.buyerDetails.name,
           email: response?.data?.buyerDetails?.email,
@@ -1401,6 +1409,11 @@ useEffect(() => {
     setImagUrl(url);
     setverifyVisible(true);
   }
+
+  const getLabel = () => {
+    return contractDetail.contractStartedBy == USER_TYPE_TEXT.BUYER ? contractDetail.subContractCounterParty : contractDetail.subContractParty;
+  }
+  
 
   return (
     <div className="scrollbar-container">
@@ -1759,7 +1772,7 @@ useEffect(() => {
                             <>
                               <Col xs={24} sm={24} md={6} lg={6} xl={6} span={contractDetail?.contractStatus === "2" ? 7 : 12}  className="columnData">
                             <div className="buyerBox" style={{ textTransform: 'capitalize' }}>
-                              {modifyCresetUserType(fromParty.userAlias,fromParty.userType.toUpperCase())}
+                              {modifyCresetUserType(fromParty.userAlias,fromParty.subuserType.toUpperCase())}
                             </div>
                             <div className="d-flex my-3">
                               <Image
@@ -1845,7 +1858,7 @@ useEffect(() => {
                                 </div>
                               </Col>
                               <Col xs={24} sm={24} md={6} lg={6} xl={6} span={contractDetail?.contractStatus === "2" ? 7 : 12}  className="columnData">
-                                <div className="buyerBox" style={{ textTransform: 'capitalize' }}>{modifyCresetUserType(toParty.userAlias,toParty.userType.toUpperCase())}</div>
+                                <div className="buyerBox" style={{ textTransform: 'capitalize' }}>{modifyCresetUserType(toParty.userAlias,toParty.subuserType.toUpperCase())}</div>
                                 <div className="d-flex my-3">
                                   <Image
                                     src={WhiteUserFull}
@@ -2908,7 +2921,7 @@ useEffect(() => {
                         )}
                         <div className="endtoend py-2 gap-3">
                           <div className="stepDetails_medium_sub">
-                            TrustIn platform fees to be paid by {modifyCresetUserType(paymentDetails?.buyerAlias,'buyer')} ({paymentDetails?.buyerPercent}%)
+                            TrustIn platform fees to be paid by {toTitleCase(USER_TYPE_TEXT.TENENT)} ({paymentDetails?.buyerPercent}%)
                           </div>
                           <div className="subText_small fw-400 text-right">
                             {moneyFormat(
@@ -2919,7 +2932,7 @@ useEffect(() => {
                         </div>
                         <div className="endtoend py-2 gap-3">
                           <div className="stepDetails_medium_sub">
-                          TrustIn platform fees to be paid by {modifyCresetUserType(paymentDetails?.sellerAlias, 'seller')} ({paymentDetails?.sellerPercent}%)
+                          TrustIn platform fees to be paid by {toTitleCase(getLabel())} ({paymentDetails?.sellerPercent}%)
                           </div>
                           <div className="subText_small fw-400 text-right">
                             <div>
@@ -2936,7 +2949,7 @@ useEffect(() => {
                         </div>
                         <div className="endtoend py-2 gap-3">
                           <div className="stepDetails_medium_sub">
-                          Amount to be paid by {modifyCresetUserType(paymentDetails?.buyerAlias, 'buyer')}
+                          Amount to be paid by {toTitleCase(USER_TYPE_TEXT.TENENT)}
                           </div>
                           <div className="subText_small fw-400 text-right">
                             {moneyFormat(
@@ -2947,7 +2960,7 @@ useEffect(() => {
                         </div>
                         <div className="endtoend py-2 gap-3">
                           <div className="stepDetails_medium_sub">
-                          Amount to be received by {modifyCresetUserType(paymentDetails?.sellerAlias, 'seller')}
+                          Amount to be received by {toTitleCase(getLabel())}
                           </div>
                           <div className="subText_small fw-400 text-right">
                             <div>
@@ -2983,7 +2996,7 @@ useEffect(() => {
                             <p>{`${ordinalSuffixOf(index + 1)} milestone - ${item.name}`}</p> }
                             {item?.paymentStatus !== "COMPLETED" &&
                               <div className="endtoend py-2">
-                                <b className="subText_small">Amount to be transferred by {modifyCresetUserType(paymentDetails?.buyerAlias,'buyer')} to their escrow account</b>
+                                <b className="subText_small">Amount to be transferred by {toTitleCase(USER_TYPE_TEXT.TENENT)} to their escrow account</b>
                                 <b className="subText_small text-end">
                                   {moneyFormat(
                                       paymentDetails?.currency,
@@ -2994,7 +3007,7 @@ useEffect(() => {
                             }
                             {item?.paymentStatus === "COMPLETED"  && item.transactionStatus !== "RELEASED" &&
                               <div className="endtoend py-2">
-                                <b className="subText_small">Amount successfully transferred to {modifyCresetUserType(paymentDetails?.buyerAlias,'buyer')}&apos;s escrow account</b>
+                                <b className="subText_small">Amount successfully transferred to {toTitleCase(USER_TYPE_TEXT.TENENT)}&apos;s escrow account</b>
                                 <b className="subText_small text-end">
                                   {moneyFormat(
                                       paymentDetails?.currency,
@@ -3006,7 +3019,7 @@ useEffect(() => {
                             {item?.paymentStatus === "COMPLETED" && item?.transactionStatus === "RELEASED" && (
                               <>
                                 <div className="endtoend py-2">
-                                  <b className="subText_small">Amount is successfully transferred to {modifyCresetUserType(paymentDetails?.sellerAlias,'seller')}&apos;s bank</b>
+                                  <b className="subText_small">Amount is successfully transferred to {toTitleCase(getLabel())}&apos;s bank</b>
                                   <b className="subText_small text-end">
                                     {moneyFormat(
                                         paymentDetails?.currency,
@@ -3075,7 +3088,7 @@ useEffect(() => {
                                   className="formSubText forgetpassword"
                                     children={
                                       <>
-                                        I, hereby authorize Trustin Limited to release the payment to the {modifyCresetUserType(paymentDetails?.sellerAlias,'seller')} at the time of fulfilment of the escrow conditions. 
+                                        I, hereby authorize Trustin Limited to release the payment to the {toTitleCase(getLabel())} at the time of fulfilment of the escrow conditions. 
                                       </>
                                     }
                                     style={{ marginLeft: "8px", textAlign: "start", flex: 1 }} 
