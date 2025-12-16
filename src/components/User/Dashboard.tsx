@@ -94,7 +94,10 @@ const UserDashboard = ():any => {
     // drafted: 0,
     buyer: 0,
     seller: 0,
-    escrowAdvisor: 0
+    escrowAdvisor: 0,
+    tenent : 0,
+    planner: 0,
+    contractor: 0,
   });
   const local = getLocalStorage("auth");
   const email = local ? JSON.parse(local)?.email : "";
@@ -350,12 +353,18 @@ const UserDashboard = ():any => {
       const buyerCount = res?.data.buyerCount;
       const sellerCount = res?.data?.sellerCount;
         const escrowAdvisorCount = res?.data?.escrowAdvisorCount;
+        const tenentCount = res?.data?.tenentCount;
+        const plannerCount = res?.data?.plannerCount;
+        const contractorCount = res?.data?.contractorCount;
       setContractList(res?.data?.data);
        const countsMap: Record<string, number> = {
         all: count,
         buyer: buyerCount,
         seller: sellerCount,
         escrowAdvisor: escrowAdvisorCount,
+        tenent : tenentCount,
+        planner: plannerCount,
+        contractor : contractorCount,
       };
         setTotalPage(countsMap[tabValue] ?? 0); 
 
@@ -365,6 +374,9 @@ const UserDashboard = ():any => {
         buyer: buyerCount,
         seller: sellerCount,
         escrowAdvisor: res?.data?.escrowAdvisorCount,
+        tenent : tenentCount,
+        planner: plannerCount,
+        contractor : contractorCount,
       });
       setLoading(false)
     })
@@ -510,8 +522,8 @@ const UserDashboard = ():any => {
                   height={16}
                   width={22}
                 />
-
-                {text === 'COMPLETED' ? (
+                {/* @todo, remove later */}
+                {text !== 'COMPLETED' ? (
                   <img
                     src={Doc}
                     alt="view"
@@ -735,13 +747,25 @@ const UserDashboard = ():any => {
                           key="all"
                         ></TabPane>
                         { userType !== USER_TYPE_TEXT?.ESCROW_ADVISOR && ( <>
-                          <TabPane
+                          {/* <TabPane
                             tab={`Buyer (${count?.buyer})`}
                             key="buyer"
-                          ></TabPane>
+                          ></TabPane> 
                           <TabPane
                             tab={`Seller (${count?.seller})`}
                             key="seller"
+                          ></TabPane> */}
+                          <TabPane
+                            tab={`Tenent (${count?.tenent})`}
+                            key="tenent"
+                          ></TabPane>
+                          <TabPane
+                            tab={`Planner (${count?.planner})`}
+                            key="planner"
+                          ></TabPane>
+                          <TabPane
+                            tab={`Contractor (${count?.contractor})`}
+                            key="contractor"
                           ></TabPane>
                         </>)}
                         <TabPane
