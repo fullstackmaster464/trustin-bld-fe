@@ -27,7 +27,7 @@ import closeIcon from "../../assets/img/whiteclose.svg";
 import View from "../../assets/img/view.svg";
 import Reload from "../../assets/img/reload.svg";
 import filterIcon from "../../assets/img/filter.svg";
-import siteLogo from "../../assets/img/currentLogo.png";
+import siteLogo from "../../assets/img/bld-market-logo.jpg";
 import Trio from "../../assets/img/trio.svg";
 import TabPane from "antd/lib/tabs/TabPane";
 import { useRef, useEffect, useState } from "react";
@@ -150,7 +150,7 @@ const EscrowTransactionDetails = ():any => {
           const internalWidth = doc.internal.pageSize.getWidth();
           for (let i = 1; i <= totalPages; i++) {
             doc.setPage(i);
-            doc.addImage(siteLogo, "PNG", 4, 10, 40, 10.5);
+            doc.addImage(siteLogo, "PNG", 4, 10, 20, 10.5);
             doc.setFont('helvetica','bold');
             doc.setTextColor(255,102,0)
             doc.setFontSize(18);

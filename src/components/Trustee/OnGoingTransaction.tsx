@@ -27,7 +27,7 @@ import {
   import DocDisabled from "../../assets/img/doc.svg";
   import { getInvoicePdf } from "../../services/user";
   import jsPDF from "jspdf";
-  import siteLogo from "../../assets/img/currentLogo.png";
+  import siteLogo from "../../assets/img/bld-logo.svg";
 
   const OngoingTransaction = ({searchedKey, setSearchedKey}: object|any):any => {
     const navigate = useNavigate();
@@ -299,7 +299,7 @@ import {
             for (let i = 1; i <= totalPages; i++) {
               
               doc.setPage(i);
-              doc.addImage(siteLogo, "PNG", 4, 10, 40, 10.5);
+              doc.addImage(siteLogo, "PNG", 4, 10, 20, 10.5);
               doc.setFont('helvetica','bold');
               doc.setTextColor(255,102,0)
               doc.setFontSize(18);

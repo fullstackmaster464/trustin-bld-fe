@@ -1573,7 +1573,7 @@ const handleBuyerCountChange = (count: number) => {
           </Form.Item>
         </Col> 
 
-        <Col md={24} className="radioInput">
+        <Col md={24} className="radioInput d-none">
           <Form.Item
             name="contractStartedBy"
             initialValue={userType === USER_TYPE_TEXT.ESCROW_ADVISOR ? USER_TYPE_TEXT.ESCROW_ADVISOR : USER_TYPE_TEXT.BUYER}

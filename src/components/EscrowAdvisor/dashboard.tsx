@@ -19,7 +19,7 @@ import PDF from "../../assets/img/pdf.svg";
 import Doc from "../../assets/img/documentdark.svg";
 import DocDisabled from "../../assets/img/doc.svg";
 import Share from "../../assets/img/share.svg";
-import siteLogo from "../../assets/img/currentLogo.png";
+import siteLogo from "../../assets/img/bld-market-logo.jpg";
 import { useEffect, useState } from "react";
 import "../../assets/scss/custom.scss";
 import "../../assets/scss/custom.scss";
@@ -146,7 +146,7 @@ const UserDashboard = ():any => {
           for (let i = 1; i <= totalPages; i++) {
             
             doc.setPage(i);
-            doc.addImage(siteLogo, "PNG", 4, 10, 40, 10.5);
+            doc.addImage(siteLogo, "PNG", 4, 10, 20, 10.5);
             doc.setFont('helvetica','bold');
             doc.setTextColor(255,102,0)
             doc.setFontSize(18);
