@@ -548,6 +548,9 @@ export const modifyCresetUserType = (userAlias:string, userType: string) => {
     case 'SELLER': modifiedUserType = 'FUNDER';break;
     case 'broker': modifiedUserType = 'broker';break;
     case 'BROKER': modifiedUserType = 'BROKER';break;
+    case 'TENENT': modifiedUserType = 'Tenent';break;
+    case 'CONTRACTOR': modifiedUserType = 'Contractor';break;
+    case 'PLANNER': modifiedUserType = 'Planner';break;
   }
   if (specialUsers.includes(userAlias)) {
     return modifiedUserType;

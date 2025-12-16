@@ -187,6 +187,8 @@ const TransactionDetails = ():any => {
   const [popupAmount, setPopupAmount] = useState<any>();
   const [commonErrorModal, setCommonErrorModal] = useState<boolean>(false);
   const [commonErrorMessage, setCommonErrorMessage] = useState<string>("");
+  const [multiBuyers, setMultiBuyers] = useState<any[]>([]);
+  const [multiSellers, setMultiSellers] = useState<any[]>([]);
   const releaseStatusList = [
     "INITIATED",
     "KYC_NOT_COMPLETED",
@@ -715,6 +717,7 @@ const TransactionDetails = ():any => {
           obj.verifyDate = moment(paymentDetails.verifyDate).format('LLL');
       })
       }
+      
       setPaymentDetails(
         obj,
       );
@@ -780,6 +783,7 @@ const TransactionDetails = ():any => {
         setFromParty({
           userAlias: response?.data?.buyerAlias,
           userType: USER_TYPE_TEXT.BUYER,
+          subuserType: toTitleCase(response?.data?.subContractParty),
           name: response?.data?.buyerDetails.name ?? '',
           email: response?.data?.buyerDetails?.email ?? '',
           entityType: response?.data?.buyerDetails?.entityType || "INDIVIDUAL",
@@ -792,6 +796,7 @@ const TransactionDetails = ():any => {
         setToParty({
           userAlias: response?.data?.sellerAlias,
           userType: USER_TYPE_TEXT.SELLER,
+          subuserType: toTitleCase(response?.data?.subContractCounterParty),
           name: response?.data?.sellerDetails.name ?? '',
           email: response?.data?.sellerDetails?.email ?? '',
           entityType: response?.data?.sellerDetails?.entityType || "INDIVIDUAL",
@@ -804,6 +809,7 @@ const TransactionDetails = ():any => {
         setFromParty({
           userAlias: response?.data?.sellerAlias,
           userType: USER_TYPE_TEXT.SELLER,
+          subuserType: toTitleCase(response?.data?.subContractParty),
           name: response?.data?.sellerDetails.name ?? '',
           email: response?.data?.sellerDetails?.email ?? '',
           entityType: response?.data?.sellerDetails?.entityType || "INDIVIDUAL",
@@ -816,6 +822,7 @@ const TransactionDetails = ():any => {
         setToParty({
           userAlias: response?.data?.buyerAlias,
           userType: USER_TYPE_TEXT.BUYER,
+          subuserType: toTitleCase(response?.data?.subContractCounterParty),
           name: response?.data?.buyerDetails.name ?? '',
           email: response?.data?.buyerDetails?.email ?? '',
           entityType: response?.data?.buyerDetails?.entityType || "INDIVIDUAL",
@@ -1053,6 +1060,7 @@ const TransactionDetails = ():any => {
     getPaymentDetails(id).then(async (response: any) => {
       setLoading(false);
       const data = response?.data;
+      
       setPaymentDetails(data);  
        getBankList(data);
       setActivePayment(data?.milestoneList?.length > 0 ? data?.milestoneList?.length - 1 : 0);
@@ -1091,6 +1099,10 @@ const TransactionDetails = ():any => {
       setCategoryDetails(response?.data);
     });
     getContractDetails(id, userAlias).then((response: any) => {
+      // console.log("getContractDetails API Responsess:", response);
+      const data = response?.data;
+      setMultiBuyers(data?.buyerList || []);
+      setMultiSellers(data?.sellerList || []);
       setContractDetail(response?.data);
       setBlueCardLoader(false);
       setBtnText(ACTION_LABEL[response?.data?.contractAction]);
@@ -1099,44 +1111,78 @@ const TransactionDetails = ():any => {
         name: response?.data?.buyerDetails.name,
         email: response?.data?.buyerDetails?.email,
       });
-            
+      const rawMainBuyer = data?.buyerList?.find((item: any) => item.isMainUser);
+      const rawMainSeller = data?.sellerList?.find((item: any) => item.isMainUser);
+
+      const normalizedBuyer = rawMainBuyer
+        ? {
+            ...rawMainBuyer,
+            ...rawMainBuyer?.userDetail,
+            countryAlias: rawMainBuyer?.userDetail?.countryAlias,
+            countrycode: rawMainBuyer?.userDetail?.callingCode,
+            contactNumber: rawMainBuyer?.userDetail?.contact,
+            nationalityName:
+              rawMainBuyer?.userDetail?.nationality ||
+              rawMainBuyer?.userDetail?.kycNationality ||
+              "",
+          }
+        : data?.buyerDetails;
+
+      const normalizedSeller = rawMainSeller
+        ? {
+            ...rawMainSeller,
+            ...rawMainSeller?.userDetail,
+            countryAlias: rawMainSeller?.userDetail?.countryAlias,
+            countrycode: rawMainSeller?.userDetail?.callingCode,
+            contactNumber: rawMainSeller?.userDetail?.contact,
+            nationalityName:
+              rawMainSeller?.userDetail?.nationality ||
+              rawMainSeller?.userDetail?.kycNationality ||
+              "",
+          }
+        : data?.sellerDetails;
+
       if (response?.data?.buyerAlias === userAlias) {
         setFromParty({
           userType: "Buyer",
-          userAlias: response?.data?.buyerAlias,
-          name: response?.data?.buyerDetails.name,
-          email: response?.data?.buyerDetails?.email,
-          entityType: response?.data?.buyerDetails?.entityType || "INDIVIDUAL",
-          country: response?.data?.buyerDetails?.companyCountry  ?? response?.data?.buyerDetails?.countryAlias ?? '',
-          nationality: formatTitleCase(response?.data?.buyerDetails?.entityType === "COMPANY" ? response?.data?.buyerDetails?.nationality : response?.data?.buyerDetails?.kycNationality)
+          subuserType : toTitleCase(response?.data?.subContractParty),
+          userAlias: data?.buyerAlias,
+          name: normalizedBuyer?.name,
+          email: normalizedBuyer?.email,
+          entityType: normalizedBuyer?.entityType || "INDIVIDUAL",
+          country: normalizedBuyer?.companyCountry ?? normalizedBuyer?.countryAlias ?? "",
+          nationality: formatTitleCase(normalizedBuyer?.nationalityName),
         });
         setToParty({
           userType: "Seller",
-          userAlias: response?.data?.sellerAlias,
-          name: response?.data?.sellerDetails.name,
-          email: response?.data?.sellerDetails?.email,
-          entityType: response?.data?.sellerDetails?.entityType || "INDIVIDUAL",
-          country: response?.data?.sellerDetails?.companyCountry ?? response?.data?.sellerDetails?.countryAlias ?? '',
-          nationality: formatTitleCase(response?.data?.sellerDetails?.entityType === "COMPANY" ? response?.data?.sellerDetails?.nationality : response?.data?.sellerDetails?.kycNationality)
+          subuserType: toTitleCase(response?.data?.subContractCounterParty),
+          userAlias: data?.sellerAlias,
+          name: normalizedSeller?.name,
+          email: normalizedSeller?.email,
+          entityType: normalizedSeller?.entityType || "INDIVIDUAL",
+          country: normalizedSeller?.companyCountry ?? normalizedSeller?.countryAlias ?? "",
+          nationality: formatTitleCase(normalizedSeller?.nationalityName),
         });
       } else {         
         setFromParty({
           userType: "Seller",
-          userAlias: response?.data?.sellerAlias,
-          name: response?.data?.sellerDetails.name,
-          email: response?.data?.sellerDetails?.email,
-          entityType: response?.data?.sellerDetails?.entityType || "INDIVIDUAL",
-          country: response?.data?.sellerDetails?.companyCountry ?? response?.data?.sellerDetails?.countryAlias ?? '',
-          nationality: formatTitleCase(response?.data?.sellerDetails?.entityType === "COMPANY" ? response?.data?.sellerDetails?.nationality : response?.data?.sellerDetails?.kycNationality)
+          subuserType: toTitleCase(response?.data?.subContractParty),
+          userAlias: data?.sellerAlias,
+          name: normalizedSeller?.name,
+          email: normalizedSeller?.email,
+          entityType: normalizedSeller?.entityType || "INDIVIDUAL",
+          country: normalizedSeller?.companyCountry ?? normalizedSeller?.countryAlias ?? "",
+          nationality: formatTitleCase(normalizedSeller?.nationalityName),
         });
         setToParty({
           userType: "Buyer",
-          userAlias: response?.data?.buyerAlias,
-          name: response?.data?.buyerDetails.name,
-          email: response?.data?.buyerDetails?.email,
-          entityType: response?.data?.buyerDetails?.entityType || "INDIVIDUAL",
-          country: response?.data?.buyerDetails?.companyCountry  ?? response?.data?.buyerDetails?.countryAlias ?? '',
-          nationality: formatTitleCase(response?.data?.buyerDetails?.entityType === "COMPANY" ? response?.data?.buyerDetails?.nationality : response?.data?.buyerDetails?.kycNationality)
+          subuserType: toTitleCase(response?.data?.subContractCounterParty),
+          userAlias: data?.buyerAlias,
+          name: normalizedBuyer?.name,
+          email: normalizedBuyer?.email,
+          entityType: normalizedBuyer?.entityType || "INDIVIDUAL",
+          country: normalizedBuyer?.companyCountry ?? normalizedBuyer?.countryAlias ?? "",
+          nationality: formatTitleCase(normalizedBuyer?.nationalityName),
         });
       }
       if(response?.data?.contractStartedBy === USER_TYPE_TEXT.ESCROW_ADVISOR || hasAdvisor(response?.data)) {
@@ -1253,14 +1299,17 @@ const TransactionDetails = ():any => {
         }
 
         setTaxDetails({...taxDetails,platformChargeAppliedOn})
-    }
-  
+    } 
+    
+     
+     
+
     const data: any = await CalculateTransactionFee({
       invoiceAmount: paymentData?.invoiceAmount,
       transactionAmount: transactionAmount,
-      plateformFees: platformFee,
-      platformChargeType: platformChargeType,
-      vatCharges: vatCharge,
+      plateformFees: platformFee,                       
+      platformChargeType: platformChargeType,            
+      vatCharges: vatCharge,                             
       buyerPercent: paymentData?.buyerPercent,
       sellerPercent: paymentData?.sellerPercent,
       hasAdvisor: hasAdvisor(paymentData),
@@ -1270,6 +1319,7 @@ const TransactionDetails = ():any => {
       minimumPlatformCharge: paymentData?.minimumPlatformCharge,
       entityType: paymentData?.itemCategoryEntityType
     })
+    
     if(paymentData?.aliasName == trxnAlias) {
       setInvoiceCal(data)
     } else{
@@ -1401,6 +1451,80 @@ useEffect(() => {
     setImagUrl(url);
     setverifyVisible(true);
   }
+
+  const getFirstPartyLabel = () =>  USER_TYPE_TEXT.TENENT;
+  const getSecondPartyLabel = () => {
+    return contractDetail.contractStartedBy == USER_TYPE_TEXT.BUYER ? contractDetail.subContractCounterParty : contractDetail.subContractParty;
+  }
+
+  const buyers = (() => {
+    const mainAlias =
+      contractDetail?.buyerAlias ||
+      (multiBuyers || []).find((x: any) => x?.isMainUser)?.userDetail?.userAlias ||
+      (multiBuyers || []).find((x: any) => x?.isMainUser)?.aliasName ||
+      null;
+
+    const map = new Map<string, any>();
+    (multiBuyers || []).forEach((u: any) => {
+      const email = u?.userDetail?.email || u?.email || null;
+      if (!email) return;
+
+      const alias =
+        u?.userDetail?.userAlias ||
+        u?.userDetail?.aliasName ||
+        u?.aliasName ||
+        u?.userAlias ||
+        u?.alias ||
+        null;
+
+      const isMain = alias && mainAlias ? alias === mainAlias : !!u?.isMainUser;
+
+      if (map.has(email)) return;
+      map.set(email, {
+        name: u?.userDetail?.name || u?.name || email,
+        email,
+        residenceCountry: u?.userDetail?.countryAlias || u?.companyCountry || u?.address || "--",
+        isMainUser: isMain,
+        alias,
+      });
+    });
+    return Array.from(map.values()).filter((b) => !b.isMainUser);
+  })();
+
+  const sellers = (() => {
+    const mainAlias =
+      contractDetail?.sellerAlias ||
+      (multiSellers || []).find((x: any) => x?.isMainUser)?.userDetail?.userAlias ||
+      (multiSellers || []).find((x: any) => x?.isMainUser)?.aliasName ||
+      null;
+
+    const map = new Map<string, any>();
+    (multiSellers || []).forEach((u: any) => {
+      const email = u?.userDetail?.email || u?.email || null;
+      if (!email) return;
+
+      const alias =
+        u?.userDetail?.userAlias ||
+        u?.userDetail?.aliasName ||
+        u?.aliasName ||
+        u?.userAlias ||
+        u?.alias ||
+        null;
+
+      const isMain = alias && mainAlias ? alias === mainAlias : !!u?.isMainUser;
+
+      if (map.has(email)) return;
+      map.set(email, {
+        name: u?.userDetail?.name || u?.name || email,
+        email,
+        residenceCountry: u?.userDetail?.countryAlias || u?.companyCountry || u?.address || "--",
+        isMainUser: isMain,
+        alias,
+      });
+    });
+    return Array.from(map.values()).filter((s) => !s.isMainUser);
+  })();
+
 
   return (
     <div className="scrollbar-container">
@@ -1759,7 +1883,7 @@ useEffect(() => {
                             <>
                               <Col xs={24} sm={24} md={6} lg={6} xl={6} span={contractDetail?.contractStatus === "2" ? 7 : 12}  className="columnData">
                             <div className="buyerBox" style={{ textTransform: 'capitalize' }}>
-                              {modifyCresetUserType(fromParty.userAlias,fromParty.userType.toUpperCase())}
+                              {modifyCresetUserType(fromParty.userAlias,fromParty.subuserType.toUpperCase())}
                             </div>
                             <div className="d-flex my-3">
                               <Image
@@ -1845,7 +1969,7 @@ useEffect(() => {
                                 </div>
                               </Col>
                               <Col xs={24} sm={24} md={6} lg={6} xl={6} span={contractDetail?.contractStatus === "2" ? 7 : 12}  className="columnData">
-                                <div className="buyerBox" style={{ textTransform: 'capitalize' }}>{modifyCresetUserType(toParty.userAlias,toParty.userType.toUpperCase())}</div>
+                                <div className="buyerBox" style={{ textTransform: 'capitalize' }}>{modifyCresetUserType(toParty.userAlias,toParty.subuserType.toUpperCase())}</div>
                                 <div className="d-flex my-3">
                                   <Image
                                     src={WhiteUserFull}
@@ -2084,6 +2208,78 @@ useEffect(() => {
                       </>
                     )}
                   </div>
+              {Array.isArray(buyers) && buyers.length > 0 && (
+                <div className="mt-4">
+                  <div className="bg-admin-card seller-bg-admin-card">
+                    <Row className="gap-3 endtoend four-buyer-block form-body">
+                      {buyers.filter((b) => !b.isMainUser).map((buyer, index) => (
+                        <Col
+                          key={index}
+                          // span={contractStatus === "2" ? 7 : 24}
+                        >
+                          <div className="d-flex">
+                            <div className="bluecard-smallbox">
+                              <img src={WhiteUserFull} alt="box" />
+                              <p className="mt-2 mb-0">Co-{toTitleCase(getFirstPartyLabel())}</p>
+                            </div>
+                            <div className="flex-fill mx-md-3">
+                              <div className="whiteTitle18 px-3 fs-5 text-break">
+                                {buyer?.name || "--"}
+                              </div>
+                              <div className="d-flex mx-3 my-2 gap-2">
+                                <Image src={WhiteEmail} alt="email" preview={false} />
+                                <span className="whiteTitle18 px-1 text-break text-wrap">
+                                  {buyer?.email || "--"}
+                                </span>
+                              </div>
+                              <div className="d-flex mx-3 my-2 gap-2">
+                                <Image src={Globe} alt="globe" preview={false} />
+                                <span className="whiteTitle18 px-1 text-break text-wrap">
+                                  {buyer?.residenceCountry || "--"}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </Col>
+                      ))}
+                    </Row>
+                  </div>
+                </div>
+              )}
+            {Array.isArray(sellers) && sellers.length > 0 && (
+            <div className="mt-4">
+              <div className="bg-admin-card seller-bg-admin-card">
+                <Row className="gap-3 endtoend four-buyer-block form-body">
+                  {sellers?.filter((s) => !s.isMainUser).map((seller, index) => (
+                    <Col 
+                      key={index} 
+                      // span={contractStatus === "2" ? 7 : 24}
+                    >
+                      <div className="d-flex">
+                        <div className="bluecard-smallbox">
+                          <img src={WhiteUserFull} alt="box" />
+                          <p className="mt-2 mb-0">Co-{toTitleCase(getSecondPartyLabel())}</p>
+                        </div>
+                        <div className="flex-fill mx-md-3">
+                          <div className="whiteTitle18 px-3 fs-5 text-break">{seller.name || "--"}</div>
+                          <div className="d-flex mx-3 my-2 gap-2">
+                            <Image src={WhiteEmail} alt="box" preview={false} />
+                            <span className="whiteTitle18 px-1 text-break text-wrap">{seller.email || "--"}</span>
+                          </div>
+                          <div className="d-flex mx-3 my-2 gap-2">
+                            <Image src={Globe} alt="icon" preview={false} />
+                            <span className="whiteTitle18 px-1 text-break text-wrap">
+                              {seller.residenceCountry || "--"}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </Col>
+                  ))}
+                </Row>
+              </div>
+              </div>
+            )}
                   {Width <= 991 ? 
                   <Col span={24} className="p-0">
                   <div className="mb-3">
@@ -2132,7 +2328,7 @@ useEffect(() => {
                                   (userType === "USER" && Number(contractDetail.contractStatus) >= 2) ?
                                    <div className={Width > 600 ? "d-flex justify-content-between align-items-center flex-wrap mb-4 gap-3" :"d-flex justify-content-between align-items-center flex-wrap mb-3 gap-3"}>
                                      <div className="stepDetails">Payout Account&apos;s Details</div>
-                                     {payoutAccount && <SecondaryOutLineButton
+                                     {payoutAccount && contractDetail?.sellerAlias == userAlias && <SecondaryOutLineButton
                                        children="Update Payout account"
                                        className="w-auto"
                                        onClick={() => {
@@ -2140,7 +2336,7 @@ useEffect(() => {
                                        }}
                                      />}
                                    </div> : 
-                                   <h5>{modifyCresetUserType(paymentDetails?.sellerAlias, 'Seller')}&apos;s Bank Details</h5>
+                                   <h5>{toTitleCase(getSecondPartyLabel())}&apos;s Bank Details</h5>
                                 }
                               </div>
                             </div>
@@ -2431,7 +2627,7 @@ useEffect(() => {
                       </Row>
                       <hr className="lightgrayHr" />
                       <Row  gutter={{ xs:25, sm: 25, md: 25, lg: 25 }} justify="space-between">
-                      <Col xs={12} sm={12} md={12} lg={12} xl={12}><div className="stepDetails mt-3 mb-3">Payment details</div></Col>
+                      <Col xs={12} sm={12} md={12} lg={12} xl={12}><div className="stepDetails mt-3 mb-3">Payment details </div></Col>
                       <div>{paymentDetails?.buyerAlias === userAlias &&
                         userType === "USER" &&
                         !paymentComplete &&
@@ -2620,7 +2816,7 @@ useEffect(() => {
                               {paymentDetails?.milestoneList?.map(
                                 (data: any, index: any) => {
                                   sellerMilestoneAmount +=  data?.sellerReceivableAmount && data?.sellerReceivableAmount !== null ? Number(data?.sellerReceivableAmount) : Number(milestoneCal?.[data?.aliasName]?.sellerAmount);
-                                  const buyerAmount = data?.buyerTransactionAmount !== null ? Number(data?.buyerTransactionAmount) : Number(milestoneCal?.[data?.aliasName]?.buyerAmount)
+                                  const buyerAmount = data?.buyerTransactionAmount !== null ? Number(data?.buyerTransactionAmount) : Number(milestoneCal?.[data.aliasName] ? milestoneCal[data.aliasName]?.buyerAmount : 0)
                                   // const totalCalculatedAmount = Number(milestoneCal[data?.aliasName]?.totalAmount)
                                   let totalPlatformFee: any = Number(milestoneCal[data?.aliasName]?.platformFee) + Number(milestoneCal[data?.aliasName]?.vatFee)
                                   allMilestonePlatformFee += totalPlatformFee;
@@ -2660,7 +2856,7 @@ useEffect(() => {
                                           <p className="fw-5 mt-1 mb-0 milestone-amount">
                                             {moneyFormat(
                                               paymentDetails.currency,
-                                              data?.buyerTransactionAmount !== null ? Number(data?.buyerTransactionAmount) : Number(milestoneCal?.[data.aliasName] ? milestoneCal[data.aliasName]?.buyerAmount : 0)
+                                              buyerAmount
                                             )}
                                           </p>
                                         </div>
@@ -2687,7 +2883,7 @@ useEffect(() => {
                                                 {data?.paymentStatus !== "COMPLETED" &&
                                                 <div>
                                                   <div className="endtoend py-2 gap-3">
-                                                  <b className="subText_small">Amount to be transferred to {modifyCresetUserType(paymentDetails?.buyerAlias,'buyer')}&apos;s escrow account
+                                                  <b className="subText_small">Amount to be transferred to {toTitleCase(getFirstPartyLabel())}&apos;s escrow account
                                                   </b>
                                                   <b className="subText_small text-end">
                                                     {moneyFormat(
@@ -2697,7 +2893,7 @@ useEffect(() => {
                                                   </b>
                                                 </div>
                                                 <div className="endtoend py-2 gap-3">
-                                                    <b className="subText_small">Amount to be received by {modifyCresetUserType(paymentDetails?.sellerAlias,'seller')}&apos;s bank account</b>
+                                                    <b className="subText_small">Amount to be received by {toTitleCase(getSecondPartyLabel())}&apos;s bank account</b>
                                                     <b className="subText_small text-end">
                                                       <div>
                                                         {moneyFormat(
@@ -2725,18 +2921,27 @@ useEffect(() => {
                                                   <div className="endtoend py-2 gap-3">
                                                     <b className="subText_small">Amount to be received by TrustIn Platform</b>
                                                     <b className="subText_small text-end">
+
+
                                                       {moneyFormat(
                                                         paymentDetails?.currency,
-                                                        (totalPlatformFee).toFixed(2)
+                                                        data?.platformChargeAmount != null && data?.vatChargeValue != null ?  
+                                                            (Number(Number(data?.platformChargeAmount) + Number(data?.vatChargeValue)).toFixed(2)) :
+                                                            (totalPlatformFee).toFixed(2)
                                                       )}
+                                                      {/* {moneyFormat(
+                                                        paymentDetails?.currency,
+                                                        (totalPlatformFee).toFixed(2)
+                                                      )} */}
                                                     </b>
                                                   </div>
                                             </div>
                                               }
                                               {data?.paymentStatus === "COMPLETED" && data.transactionStatus !== "RELEASED" &&
                                                 <div>
+                                                  
                                                   <div className="endtoend py-2 gap-3">
-                                                  <b className="subText_small">Amount to be transferred to {modifyCresetUserType(paymentDetails?.buyerAlias,'buyer')}&apos;s escrow account
+                                                  <b className="subText_small">Amount to be transferred to {toTitleCase(getFirstPartyLabel())}&apos;s escrow account
                                                   </b>
                                                   <b className="subText_small text-end">
                                                     {moneyFormat(
@@ -2746,12 +2951,20 @@ useEffect(() => {
                                                   </b>
                                                 </div>
                                                 <div className="endtoend py-2 gap-3">
-                                                    <b className="subText_small">Amount to be received by {modifyCresetUserType(paymentDetails?.sellerAlias,'seller')}&apos;s bank account</b>
+                                                    <b className="subText_small">Amount to be received by {toTitleCase(getSecondPartyLabel())}&apos;s bank account</b>
                                                     <b className="subText_small text-end">
-                                                      {moneyFormat(
+                                                      {/* {moneyFormat(
                                                         paymentDetails?.currency,
                                                         milestoneCal[data?.aliasName]?.sellerAmount
-                                                      )}
+                                                      )} */}
+
+                                                      {moneyFormat(
+                                                          paymentDetails?.currency,
+                                                          data?.sellerReceivableAmount != null ?  
+                                                            (Number(Number(data?.sellerReceivableAmount).toFixed(2))) :                                                          
+                                                            milestoneCal[data?.aliasName]?.sellerAmount
+                                                        )}
+
                                                     </b>
                                                   </div>
                                                   {(paymentDetails?.contractStartedBy === USER_TYPE_TEXT.ESCROW_ADVISOR || hasAdvisor(paymentDetails)) && (
@@ -2769,9 +2982,16 @@ useEffect(() => {
                                                     <b className="subText_small">Amount to be received by TrustIn Platform</b>
                                                     <b className="subText_small text-end">
                                                       {moneyFormat(
+                                                          paymentDetails?.currency,
+                                                          data?.platformChargeAmount != null && data?.vatChargeValue != null ?  
+                                                            (Number(Number(data?.platformChargeAmount) + Number(data?.vatChargeValue)).toFixed(2)) :                                                          
+                                                            (Number(milestoneCal[data?.aliasName]?.platformFee) + Number(milestoneCal[data?.aliasName]?.vatFee)).toFixed(2)
+                                                        )}
+
+                                                      {/* {moneyFormat(
                                                         paymentDetails?.currency,
                                                         (Number(milestoneCal[data?.aliasName]?.platformFee) + Number(milestoneCal[data?.aliasName]?.vatFee)).toFixed(2)
-                                                      )}
+                                                      )} */}
                                                     </b>
                                                   </div>
                                             </div>
@@ -2779,7 +2999,7 @@ useEffect(() => {
                                               {data?.paymentStatus === "COMPLETED" && data?.transactionStatus === "RELEASED" && (
                                                 <>
                                                   <div className="endtoend py-2 gap-3">
-                                                    <b className="subText_small">Amount to be received by {modifyCresetUserType(paymentDetails?.sellerAlias,'seller')}&apos;s bank account</b>
+                                                    <b className="subText_small">Amount to be received by {toTitleCase(getSecondPartyLabel())}&apos;s bank account</b>
                                                     <b className="subText_small text-end">
                                                       {moneyFormat(
                                                         paymentDetails?.currency,
@@ -2802,9 +3022,16 @@ useEffect(() => {
                                                     <b className="subText_small">Amount to be received by TrustIn Platform</b>
                                                     <b className="subText_small text-end">
                                                       {moneyFormat(
+                                                          paymentDetails?.currency,
+                                                          data?.platformChargeAmount != null && data?.vatChargeValue != null ?  
+                                                            (Number(Number(data?.platformChargeAmount) + Number(data?.vatChargeValue)).toFixed(2)) :                                                          
+                                                            (Number(milestoneCal[data?.aliasName]?.platformFee) + Number(milestoneCal[data?.aliasName]?.vatFee)).toFixed(2)
+                                                        )}
+
+                                                        {/* {moneyFormat(
                                                         paymentDetails?.currency,
                                                         (Number(milestoneCal[data?.aliasName]?.platformFee) + Number(milestoneCal[data?.aliasName]?.vatFee)).toFixed(2)
-                                                      )}
+                                                        )} */}
                                                     </b>
                                                   </div>
                                                 </>
@@ -2855,18 +3082,21 @@ useEffect(() => {
                         </div>
                         <div className="endtoend py-2 gap-3">
                           <div className="stepDetails_medium_sub">
-                            Total TrustIn fees ({invoiceCal?.platformPercent}) +{" "}
+                            {/* ({invoiceCal?.platformPercent}) */}
+                            Total TrustIn fees ({paymentDetails?.platformCharge ?? invoiceCal?.platformPercent}) +{" "} 
                           {paymentDetails?.vatCharges ?? process.env.COUNTRY_VAT}% VAT
                           </div>
                           <div className="subText_small fw-400 text-right">
                             {moneyFormat(
                               paymentDetails?.currency,
-                              Number(invoiceCal?.platformFee ? invoiceCal?.platformFee : 0))
+                              // Number(invoiceCal?.platformFee ? invoiceCal?.platformFee : 0))
+                              Number(paymentDetails?.payxcrowFee ?? invoiceCal?.platformFee ?? 0))
                             }{" "}
                             +{" "}
                             {moneyFormat(
                               paymentDetails?.currency,
-                              Number(invoiceCal?.vatFee ? invoiceCal?.vatFee : 0)
+                              // Number(invoiceCal?.vatFee ? invoiceCal?.vatFee : 0)
+                              Number(paymentDetails?.payxcrowVat ?? invoiceCal?.vatFee ?? 0)
                             )}
                           </div>
                         </div>
@@ -2884,7 +3114,7 @@ useEffect(() => {
                         </div>
                         <div className="endtoend py-2">
                           <div className="stepDetails_medium_sub">
-                          Escrow advisor fees to be paid by {modifyCresetUserType(paymentDetails?.buyerAlias,'buyer')} ({Number(paymentDetails?.buyerCommissionPercent || 0)}%)
+                          Escrow advisor fees to be paid by {toTitleCase(getFirstPartyLabel())} ({Number(paymentDetails?.buyerCommissionPercent || 0)}%)
                           </div>
                           <div className="subText_small fw-400 text-right">
                             {moneyFormat(
@@ -2895,7 +3125,7 @@ useEffect(() => {
                         </div>
                         <div className="endtoend py-2">
                           <div className="stepDetails_medium_sub">
-                          Escrow advisor fees to be paid by {modifyCresetUserType(paymentDetails?.sellerAlias,'seller')} ({Number(paymentDetails?.sellerCommissionPercent || 0)}%)
+                          Escrow advisor fees to be paid by {toTitleCase(getSecondPartyLabel())} ({Number(paymentDetails?.sellerCommissionPercent || 0)}%)
                           </div>
                           <div className="subText_small fw-400 text-right">
                             {moneyFormat(
@@ -2908,35 +3138,38 @@ useEffect(() => {
                         )}
                         <div className="endtoend py-2 gap-3">
                           <div className="stepDetails_medium_sub">
-                            TrustIn platform fees to be paid by {modifyCresetUserType(paymentDetails?.buyerAlias,'buyer')} ({paymentDetails?.buyerPercent}%)
+                            TrustIn platform fees to be paid by {toTitleCase(getFirstPartyLabel())} ({paymentDetails?.buyerPercent}%)
                           </div>
                           <div className="subText_small fw-400 text-right">
                             {moneyFormat(
                               paymentDetails?.currency,
-                              Number(invoiceCal?.buyerTransactionFee)
+                              // Number(invoiceCal?.buyerTransactionFee)
+                              Number(paymentDetails?.buyerTransactionFee ?? invoiceCal?.buyerTransactionFee ?? 0)
                             )}
                           </div>
                         </div>
                         <div className="endtoend py-2 gap-3">
                           <div className="stepDetails_medium_sub">
-                          TrustIn platform fees to be paid by {modifyCresetUserType(paymentDetails?.sellerAlias, 'seller')} ({paymentDetails?.sellerPercent}%)
+                          TrustIn platform fees to be paid by {toTitleCase(getSecondPartyLabel())} ({paymentDetails?.sellerPercent}%)
                           </div>
                           <div className="subText_small fw-400 text-right">
                             <div>
                               {moneyFormat(
                                 paymentDetails?.currency,
-                                Number(invoiceCal?.sellerTransactionFee)
+                                // Number(invoiceCal?.sellerTransactionFee)
+                                Number(paymentDetails?.sellerTransactionFee ?? invoiceCal?.sellerTransactionFee ?? 0)
                               )}
                             </div>
                             {forexExchangeRate && (payoutAccount?.accountCurrency ?? payoutAccount?.currency) != null && paymentDetails?.currency !== (payoutAccount?.accountCurrency ?? payoutAccount?.currency) ? 
                             <div style={{fontSize: "14px"}}>
-                              {!isForexExchangeRateLoading ? `(${Number((Number(invoiceCal?.sellerTransactionFee) * Number(forexExchangeRate)).toFixed(2)).toLocaleString()} ${payoutAccount?.accountCurrency ?? payoutAccount?.currency})` : 'Calculating...'}
+                                                              {/* Number((Number(invoiceCal?.sellerTransactionFee)  */}
+                              {!isForexExchangeRateLoading ? `(${Number((Number(paymentDetails?.sellerTransactionFee ?? invoiceCal?.sellerTransactionFee) * Number(forexExchangeRate)).toFixed(2)).toLocaleString()} ${payoutAccount?.accountCurrency ?? payoutAccount?.currency})` : 'Calculating...'}
                             </div>  : null}
                           </div>
                         </div>
                         <div className="endtoend py-2 gap-3">
                           <div className="stepDetails_medium_sub">
-                          Amount to be paid by {modifyCresetUserType(paymentDetails?.buyerAlias, 'buyer')}
+                          Amount to be paid by {toTitleCase(getFirstPartyLabel())}
                           </div>
                           <div className="subText_small fw-400 text-right">
                             {moneyFormat(
@@ -2947,7 +3180,7 @@ useEffect(() => {
                         </div>
                         <div className="endtoend py-2 gap-3">
                           <div className="stepDetails_medium_sub">
-                          Amount to be received by {modifyCresetUserType(paymentDetails?.sellerAlias, 'seller')}
+                          Amount to be received by {toTitleCase(getSecondPartyLabel())}
                           </div>
                           <div className="subText_small fw-400 text-right">
                             <div>
@@ -2955,10 +3188,11 @@ useEffect(() => {
                                 paymentDetails?.currency,
                                 Number(invoiceCal?.sellerAmount)
                               )}
+                              
                             </div>
                             {forexExchangeRate && (payoutAccount?.accountCurrency ?? payoutAccount?.currency) != null && paymentDetails?.currency !== (payoutAccount?.accountCurrency ?? payoutAccount?.currency) ? 
                             <div style={{fontSize: "14px"}}>
-                              {!isForexExchangeRateLoading ? `(${Number((Number(invoiceCal?.sellerAmount) * Number(forexExchangeRate)).toFixed(2)).toLocaleString()} ${payoutAccount?.accountCurrency ?? payoutAccount?.currency})` : 'Calculating...'}
+                              {!isForexExchangeRateLoading ? `(${Number((Number(Number(paymentDetails?.milestoneList?.[0]?.sellerReceivableAmount  ?? Number(invoiceCal?.sellerAmount) ?? 0)) * Number(forexExchangeRate)).toFixed(2)).toLocaleString()} ${payoutAccount?.accountCurrency ?? payoutAccount?.currency})` : 'Calculating...'}
                             </div>  : null}
                           </div>
                         </div>
@@ -2975,6 +3209,7 @@ useEffect(() => {
                         </div>
                         {paymentDetails?.milestoneList?.map((item:any,index:any)=>(
                           <>
+                          
                           <div key={index} className="w-100">
                             {(item?.isActive === true || item?.transactionStatus === "RELEASED") && 
                             <>
@@ -2983,7 +3218,7 @@ useEffect(() => {
                             <p>{`${ordinalSuffixOf(index + 1)} milestone - ${item.name}`}</p> }
                             {item?.paymentStatus !== "COMPLETED" &&
                               <div className="endtoend py-2">
-                                <b className="subText_small">Amount to be transferred by {modifyCresetUserType(paymentDetails?.buyerAlias,'buyer')} to their escrow account</b>
+                                <b className="subText_small">Amount to be transferred by {toTitleCase(getFirstPartyLabel())} to their escrow account</b>
                                 <b className="subText_small text-end">
                                   {moneyFormat(
                                       paymentDetails?.currency,
@@ -2994,7 +3229,7 @@ useEffect(() => {
                             }
                             {item?.paymentStatus === "COMPLETED"  && item.transactionStatus !== "RELEASED" &&
                               <div className="endtoend py-2">
-                                <b className="subText_small">Amount successfully transferred to {modifyCresetUserType(paymentDetails?.buyerAlias,'buyer')}&apos;s escrow account</b>
+                                <b className="subText_small">Amount successfully transferred to {toTitleCase(getFirstPartyLabel())}&apos;s escrow account</b>
                                 <b className="subText_small text-end">
                                   {moneyFormat(
                                       paymentDetails?.currency,
@@ -3006,7 +3241,7 @@ useEffect(() => {
                             {item?.paymentStatus === "COMPLETED" && item?.transactionStatus === "RELEASED" && (
                               <>
                                 <div className="endtoend py-2">
-                                  <b className="subText_small">Amount is successfully transferred to {modifyCresetUserType(paymentDetails?.sellerAlias,'seller')}&apos;s bank</b>
+                                  <b className="subText_small">Amount is successfully transferred to {toTitleCase(getSecondPartyLabel())}&apos;s bank</b>
                                   <b className="subText_small text-end">
                                     {moneyFormat(
                                         paymentDetails?.currency,
@@ -3075,7 +3310,7 @@ useEffect(() => {
                                   className="formSubText forgetpassword"
                                     children={
                                       <>
-                                        I, hereby authorize Trustin Limited to release the payment to the {modifyCresetUserType(paymentDetails?.sellerAlias,'seller')} at the time of fulfilment of the escrow conditions. 
+                                        I, hereby authorize Trustin Limited to release the payment to the {toTitleCase(getSecondPartyLabel())} at the time of fulfilment of the escrow conditions. 
                                       </>
                                     }
                                     style={{ marginLeft: "8px", textAlign: "start", flex: 1 }} 
@@ -3699,7 +3934,9 @@ useEffect(() => {
                   {Width <= 991 ? <Col span={24} className="p-0"> 
                   <div className="d-flex justify-content-end pb-3 pt-3">
                   {paymentDetails?.milestoneList?.map((item: any, index: number) => {
+                     const isValidUser = [paymentDetails?.escrowAdvisorAlias, paymentDetails?.buyerAlias,paymentDetails?.sellerAlias].includes(userAlias);
                     if (
+                      isValidUser &&
                       item?.paymentStatus === "COMPLETED" &&
                       userType === "USER" &&
                       paymentDetails?.isDispute === false &&
@@ -3772,9 +4009,12 @@ useEffect(() => {
                       checked={contractDetail?.isAgreementFull}
                     />
                   </Card>
+                 
                   <div className="d-flex justify-content-end pb-3 pt-3">
                   {paymentDetails?.milestoneList?.map((item: any, index: number) => {
+                     const isValidUser = [paymentDetails?.escrowAdvisorAlias, paymentDetails?.buyerAlias,paymentDetails?.sellerAlias].includes(userAlias);
                     if (
+                      isValidUser &&
                       item?.paymentStatus === "COMPLETED" &&
                       userType === "USER" &&
                       paymentDetails?.isDispute === false &&
@@ -4011,7 +4251,7 @@ useEffect(() => {
                   paymentDetails?.currency,
                   Number(invoiceCal?.buyerAmount)
                 )}
-                </>} will be released into {modifyCresetUserType(paymentDetails?.sellerAlias,'seller')}&#39;s account within 2-5 working days.
+                </>} will be released into {modifyCresetUserType(paymentDetails?.sellerAlias,'seller')}&#39;s account.
               </>}
               className="my-3"
             />

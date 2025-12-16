@@ -8,7 +8,7 @@ import AddContract from "../../assets/img/addContract.svg";
 import { useEffect, useRef, useState } from "react";
 import moment from "moment";
 import { NormalBoldText, NormalText } from "../ui-elements/TextRepo";
-import { USER_TYPE_TEXT, acceptedDocsFileTypes, getLocalStorage, modifyCresetUserType, ordinalSuffixOf } from "../Common/Constants";
+import { USER_TYPE_TEXT, acceptedDocsFileTypes, getLocalStorage, modifyCresetUserType, ordinalSuffixOf, toTitleCase } from "../Common/Constants";
 import Suitcase from "../../assets/img/sellerJob.svg";
 import { getTransactionLinkList } from "../../services/admin";
 
@@ -1137,6 +1137,11 @@ const EscrowTransationHistorySteps = (props: any) => {
     );
   };  
 
+  const getFirstPartyLabel = () =>  USER_TYPE_TEXT.TENENT;
+    const getSecondPartyLabel = () => {
+      return contractDetail.contractStartedBy == USER_TYPE_TEXT.BUYER ? contractDetail.subContractCounterParty : contractDetail.subContractParty;
+    }
+
   const description = (data: any) => {   
     let updaterName = data?.name;
     let updaterRole = data?.role;
@@ -1164,11 +1169,14 @@ const EscrowTransationHistorySteps = (props: any) => {
       }
       
     } else {
+      
       if (userAlias !== data?.updatedBy) {
         if (data?.updatedBy === buyerAlias) {
-          updaterRole = modifyCresetUserType(buyerAlias,'Buyer');
+          // updaterRole = modifyCresetUserType(buyerAlias,'Buyer');
+          updaterRole = toTitleCase(getFirstPartyLabel());
         } else if (data?.updatedBy === sellerAlias) {
-          updaterRole = modifyCresetUserType(sellerAlias,'Seller');
+          updaterRole = toTitleCase(getSecondPartyLabel());
+          // updaterRole = modifyCresetUserType(sellerAlias,'Seller');
         } else {
           updaterRole = '';
         }

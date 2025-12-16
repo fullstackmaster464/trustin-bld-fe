@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { USER_TYPE_TEXT, getLocalStorage, modifyCresetUserType } from "../../Common/Constants";
+import { USER_TYPE_TEXT, VALID_CURRENCY, getLocalStorage, modifyCresetUserType } from "../../Common/Constants";
 import {
   getAllItemType,
   getContractDetails,
@@ -51,6 +51,8 @@ import infoIcon from "../../../assets/img/informIcon.svg"
 const EditTransaction = ():any => {
   const [formValues, setFormValues] = useState<any>({
     userType: USER_TYPE_TEXT.BUYER,
+    subContractParty: USER_TYPE_TEXT.TENENT,
+    currency: VALID_CURRENCY[0],
   });
   const [buyerCount, setBuyerCount] = useState(null);
   const [buyerCountOpposite, setBuyerCountOpposite] = useState(null);
